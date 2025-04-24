@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 from datetime import datetime
+import time
 from pathlib import Path
 
 BASE_URL = "http://localhost:5000"
@@ -16,19 +17,121 @@ st.set_page_config(
 
 # Load CSS
 def load_css():
-    # Get the current file's directory
-    current_dir = Path(__file__).parent
+    css = """
+    <style>
+        /* Main container styles */
+        .main {
+            padding: 2rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+        }
 
-    # Construct the path to the CSS file
-    css_file = current_dir / "styles" / "style.css"
+        /* Sidebar styles */
+        [data-testid="stSidebar"] {
+            background: linear-gradient(180deg, #2e7d32, #1b5e20);
+            color: white;
+            padding: 1.5rem;
+        }
 
-    # Check if file exists
-    if not css_file.exists():
-        st.error(f"CSS file not found at: {css_file}")
-        return
+        /* Button styles */
+        .stButton > button {
+            background-color: #2e7d32;
+            color: white;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s;
+            border: none;
+            font-weight: 500;
+        }
 
-    with open(css_file) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+        .stButton > button:hover {
+            background-color: #1b5e20;
+            transform: scale(1.02);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Card styles */
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+            border-left: 5px solid #2e7d32;
+            transition: transform 0.3s;
+        }
+
+        /* Notification styles */
+        .stAlert {
+            border-radius: 8px;
+        }
+
+        .stSuccess {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .stError {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        /* Footer styles */
+        .footer {
+            margin-top: 3rem;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9rem;
+            padding: 1rem;
+            border-top: 1px solid #eee;
+        }
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+
+
+load_css()
+
+# Initialize session state
+if 'token' not in st.session_state:
+    st.session_state.token = None
+if 'menu_choice' not in st.session_state:
+    st.session_state.menu_choice = "Dashboard"
+if 'view_client_id' not in st.session_state:
+    st.session_state.view_client_id = None
+if 'current_user' not in st.session_state:
+    st.session_state.current_user = None
+
+
+# Helper functions
+def make_authenticated_request(method, endpoint, **kwargs):
+    """Handle all API requests with authentication and error handling"""
+    headers = kwargs.pop('headers', {})
+    if st.session_state.token:
+        headers['Authorization'] = f"Bearer {st.session_state.token}"
+
+    try:
+        response = requests.request(
+            method,
+            f"{BASE_URL}{endpoint}",
+            headers=headers,
+            **kwargs
+        )
+
+        if response.status_code == 401:
+            st.error("Session expired. Please log in again.")
+            st.session_state.token = None
+            st.session_state.current_user = None
+            st.rerun()
+
+        return response
+
+    except requests.exceptions.ConnectionError:
+        st.error("🔴 Backend server unavailable. Please ensure the backend is running.")
+        return None
+    except requests.exceptions.RequestException as e:
+        st.error(f"🛑 Network error: {str(e)}")
+        return None
 
 
 # App title and description
@@ -42,311 +145,369 @@ st.markdown("""
 # Sidebar navigation
 with st.sidebar:
     st.image("https://via.placeholder.com/150x50?text=Health+System", width=150)
-    st.markdown("""
-        <div style="margin: 1rem 0; font-size: 1.1rem; font-weight: bold; color: white;">
-            Main Navigation
-        </div>
-    """, unsafe_allow_html=True)
 
-    menu = [
-        {"icon": "🏠", "label": "Dashboard", "key": "home"},
-        {"icon": "👤", "label": "Register Client", "key": "register"},
-        {"icon": "📋", "label": "Enroll Client", "key": "enroll"},
-        {"icon": "🔍", "label": "Search Clients", "key": "search"},
-        {"icon": "📊", "label": "Client Profile", "key": "profile"},
-        {"icon": "⚙️", "label": "System Settings", "key": "settings"}
-    ]
+    if not st.session_state.token:
+        st.markdown("### Login")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
 
-    choice = st.radio(
-        "Navigate to:",
-        options=[item["label"] for item in menu],
-        format_func=lambda x: f"{next(item['icon'] for item in menu if item['label'] == x)} {x}",
-        label_visibility="collapsed"
-    )
+        if st.button("Login"):
+            with st.spinner("Authenticating..."):
+                response = make_authenticated_request(
+                    "POST", "/api/auth/login",
+                    json={"username": username, "password": password}
+                )
 
-    st.markdown("---")
-    st.markdown("""
-        <div style="font-size: 0.8rem; color: #e0e0e0;">
-            <p>Version 1.0.0</p>
-            <p>Last updated: {}</p>
-        </div>
-    """.format(datetime.now().strftime("%Y-%m-%d")), unsafe_allow_html=True)
+                if response and response.status_code == 200:
+                    data = response.json()
+                    st.session_state.token = data.get('token')
+                    st.session_state.current_user = data.get('user')
+                    st.success("Login successful!")
+                    time.sleep(1)
+                    st.rerun()
+                elif response:
+                    st.error(f"Login failed: {response.json().get('message', 'Invalid credentials')}")
+    else:
+        st.markdown(f"### Welcome, {st.session_state.current_user.get('username', 'User')}")
+        if st.button("Logout"):
+            st.session_state.token = None
+            st.session_state.current_user = None
+            st.session_state.menu_choice = "Dashboard"
+            st.rerun()
 
-# Main content
-if choice == "Dashboard":
-    st.subheader("System Overview")
-
-    # Stats cards
-    col1, col2, col3 = st.columns(3)
-    with col1:
         st.markdown("""
-            <div class="card">
-                <h3>Total Clients</h3>
-                <p style="font-size: 2rem; margin: 0.5rem 0;">1,248</p>
-                <p style="color: #2e7d32; font-size: 0.9rem;">↑ 12% from last month</p>
+            <div style="margin: 1rem 0; font-size: 1.1rem; font-weight: bold; color: white;">
+                Main Navigation
             </div>
         """, unsafe_allow_html=True)
 
-    with col2:
-        st.markdown("""
-            <div class="card">
-                <h3>Active Programs</h3>
-                <p style="font-size: 2rem; margin: 0.5rem 0;">7</p>
-                <p style="color: #2e7d32; font-size: 0.9rem;">TB, HIV, Malaria, etc.</p>
-            </div>
-        """, unsafe_allow_html=True)
+        menu = [
+            {"icon": "🏠", "label": "Dashboard", "key": "home"},
+            {"icon": "👤", "label": "Register Client", "key": "register"},
+            {"icon": "📋", "label": "Enroll Client", "key": "enroll"},
+            {"icon": "🔍", "label": "Search Clients", "key": "search"},
+            {"icon": "📊", "label": "Client Profile", "key": "profile"},
+            {"icon": "🏥", "label": "Programs", "key": "programs"},
+            {"icon": "⚙️", "label": "Admin", "key": "admin"}
+        ]
 
-    with col3:
-        st.markdown("""
-            <div class="card">
-                <h3>Recent Activity</h3>
-                <p style="font-size: 0.9rem;">5 new enrollments today</p>
-                <p style="font-size: 0.9rem;">3 client registrations</p>
-            </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("---")
-    st.markdown("""
-        <div style="margin-top: 1rem;">
-            <h3>Quick Actions</h3>
-            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                <button class="quick-action" onclick="window.location.href='#register'">Register New Client</button>
-                <button class="quick-action" onclick="window.location.href='#enroll'">Process Enrollment</button>
-                <button class="quick-action" onclick="window.location.href='#reports'">Generate Reports</button>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
-elif choice == "Register Client":
-    st.subheader("Client Registration")
-
-    with st.form("registration_form"):
-        cols = st.columns(2)
-        with cols[0]:
-            first_name = st.text_input("First Name*", placeholder="John", help="Enter client's first name")
-        with cols[1]:
-            last_name = st.text_input("Last Name*", placeholder="Doe", help="Enter client's last name")
-
-        cols = st.columns(3)
-        with cols[0]:
-            dob = st.date_input("Date of Birth*", max_value=datetime.now(), help="Client's date of birth")
-        with cols[1]:
-            gender = st.selectbox("Gender*", ["", "Male", "Female", "Other", "Prefer not to say"], help="Client's gender identity")
-        with cols[2]:
-            phone = st.text_input("Phone Number*", placeholder="+1234567890", help="Primary contact number")
-
-        address = st.text_input("Address", placeholder="123 Main St, City", help="Current residential address")
-
-        notes = st.text_area("Additional Notes", height=100, placeholder="Any relevant health information or notes...")
-
-        submitted = st.form_submit_button("Register Client", type="primary")
-        if submitted:
-            if first_name and last_name and dob and gender and phone:
-                # Simulate API call
-                client_data = {
-                    "first_name": first_name,
-                    "last_name": last_name,
-                    "dob": str(dob),
-                    "gender": gender,
-                    "phone": phone,
-                    "address": address,
-                    "notes": notes
-                }
-                try:
-                    response = requests.post(f"{BASE_URL}/clients", json=client_data)
-                    if response.status_code == 200:
-                        st.success("Client registered successfully!")
-                        st.balloons()
-                        client_id = response.json().get("id")
-                        st.markdown(f"""
-                            <div class="card">
-                                <h3>Registration Complete</h3>
-                                <p>Client ID: <strong>{client_id}</strong></p>
-                                <p>Name: <strong>{first_name} {last_name}</strong></p>
-                                <p>Please note this ID for future reference.</p>
-                            </div>
-                        """, unsafe_allow_html=True)
-                    else:
-                        st.error("Registration failed. Please try again.")
-                except requests.exceptions.ConnectionError:
-                    st.error("Could not connect to the server. Please try again later.")
-            else:
-                st.warning("Please fill all required fields (*)")
-
-elif choice == "Enroll Client":
-    st.subheader("Client Program Enrollment")
-
-    with st.expander("ℹ️ How to enroll a client", expanded=True):
-        st.markdown("""
-            1. Enter the client's ID (found in their profile)
-            2. Select the programs to enroll in
-            3. Choose an enrollment date
-            4. Click "Enroll Client" to complete the process
-        """)
-
-    with st.form("enrollment_form"):
-        client_id = st.text_input("Client ID*", placeholder="Enter client ID", help="The unique ID of the client")
-
-        st.markdown("**Select Programs***")
-        programs = st.multiselect(
-            "Available Programs",
-            ["TB Treatment", "HIV Care", "Malaria Prevention", "Maternal Health",
-             "Child Immunization", "Nutrition Support", "Chronic Disease Management"],
+        choice = st.radio(
+            "Navigate to:",
+            options=[item["label"] for item in menu],
+            format_func=lambda x: f"{next(item['icon'] for item in menu if item['label'] == x)} {x}",
             label_visibility="collapsed",
-            help="Select one or more programs"
+            key="nav_radio"
         )
 
-        enrollment_date = st.date_input("Enrollment Date*", datetime.now(), help="Date when enrollment begins")
+        st.session_state.menu_choice = choice
+        st.markdown("---")
+        st.markdown("""
+            <div style="font-size: 0.8rem; color: #e0e0e0;">
+                <p>Version 1.2.0</p>
+                <p>Last updated: {}</p>
+            </div>
+        """.format(datetime.now().strftime("%Y-%m-%d")), unsafe_allow_html=True)
 
-        submitted = st.form_submit_button("Enroll Client", type="primary")
-        if submitted:
-            if client_id and programs and enrollment_date:
-                try:
-                    response = requests.post(
-                        f"{BASE_URL}/clients/{client_id}/enroll",
-                        json={
-                            "programs": programs,
-                            "enrollment_date": str(enrollment_date)
-                        }
-                    )
-                    if response.status_code == 200:
-                        st.success(f"Client enrolled in {len(programs)} program(s) successfully!")
-                        st.json(response.json())
-                    else:
-                        st.error("Enrollment failed. Please check the client ID.")
-                except requests.exceptions.ConnectionError:
-                    st.error("Could not connect to the server. Please try again later.")
+# Main content - only show if authenticated
+if st.session_state.token:
+    if st.session_state.menu_choice == "Dashboard":
+        st.subheader("System Overview")
+
+        with st.spinner("Loading system data..."):
+            stats_response = make_authenticated_request("GET", "/api/stats")
+
+            if stats_response and stats_response.status_code == 200:
+                stats = stats_response.json()
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.markdown(f"""
+                        <div class="card">
+                            <h3>Total Clients</h3>
+                            <p style="font-size: 2rem; margin: 0.5rem 0;">{stats.get('total_clients', 'N/A')}</p>
+                            <p style="color: #2e7d32; font-size: 0.9rem;">↑ {stats.get('client_growth', '0')}% from last month</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                with col2:
+                    st.markdown(f"""
+                        <div class="card">
+                            <h3>Active Programs</h3>
+                            <p style="font-size: 2rem; margin: 0.5rem 0;">{stats.get('active_programs', 'N/A')}</p>
+                            <p style="color: #2e7d32; font-size: 0.9rem;">{stats.get('program_names', 'Loading...')}</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                with col3:
+                    st.markdown(f"""
+                        <div class="card">
+                            <h3>Recent Activity</h3>
+                            <p style="font-size: 0.9rem;">{stats.get('recent_enrollments', '0')} new enrollments today</p>
+                            <p style="font-size: 0.9rem;">{stats.get('recent_registrations', '0')} client registrations</p>
+                        </div>
+                    """, unsafe_allow_html=True)
             else:
-                st.warning("Please fill all required fields (*)")
+                st.error("Failed to load system statistics")
 
-elif choice == "Search Clients":
-    st.subheader("Client Search")
+        st.markdown("---")
+        st.markdown("### Quick Actions")
 
-    search_tab, advanced_tab = st.tabs(["🔍 Quick Search", "🔎 Advanced Search"])
+        quick_col1, quick_col2, quick_col3 = st.columns(3)
 
-    with search_tab:
-        with st.form("quick_search"):
-            query = st.text_input("Search by name, ID, or phone", placeholder="Enter search term", help="Search for clients by any identifier")
-            cols = st.columns(2)
-            with cols[0]:
-                submitted = st.form_submit_button("Search", type="primary")
-            with cols[1]:
-                clear = st.form_submit_button("Clear")
+        with quick_col1:
+            if st.button("Register New Client", key="quick_register"):
+                st.session_state.menu_choice = "Register Client"
+                st.rerun()
 
-            if submitted and query:
-                try:
-                    response = requests.get(f"{BASE_URL}/clients", params={"query": query})
-                    if response.status_code == 200:
-                        results = response.json()
-                        if results:
-                            st.success(f"Found {len(results)} matching clients")
-                            for client in results:
-                                with st.expander(f"{client.get('name', 'Unknown')} (ID: {client.get('id', 'N/A')})"):
-                                    cols = st.columns(3)
-                                    with cols[0]:
-                                        st.markdown("**Contact Info**")
-                                        st.write(f"📞 {client.get('phone', 'N/A')}")
-                                        st.write(f"🏠 {client.get('address', 'No address')}")
-                                    with cols[1]:
-                                        st.markdown("**Programs**")
-                                        if client.get("programs"):
-                                            for prog in client["programs"]:
-                                                st.write(f"- {prog}")
-                                        else:
-                                            st.write("No programs")
-                                    with cols[2]:
-                                        st.markdown("**Actions**")
-                                        st.button("View Profile", key=f"view_{client['id']}")
-                                        st.button("Enroll in Program", key=f"enroll_{client['id']}")
-                        else:
-                            st.info("No clients found matching your search")
+        with quick_col2:
+            if st.button("Process Enrollment", key="quick_enroll"):
+                st.session_state.menu_choice = "Enroll Client"
+                st.rerun()
+
+        with quick_col3:
+            if st.button("Generate Reports", key="quick_reports"):
+                st.warning("Reports feature coming soon!")
+
+    elif st.session_state.menu_choice == "Programs":
+        st.subheader("Health Programs Management")
+
+        tab1, tab2 = st.tabs(["View Programs", "Add New Program"])
+
+        with tab1:
+            with st.spinner("Loading programs..."):
+                response = make_authenticated_request("GET", "/api/programs")
+
+                if response and response.status_code == 200:
+                    programs = response.json()
+                    if programs:
+                        st.success(f"Found {len(programs)} programs")
+                        for program in programs:
+                            with st.expander(f"{program['name']} ({'Active' if program['is_active'] else 'Inactive'})"):
+                                st.write(f"**Description:** {program.get('description', 'No description')}")
+
+                                cols = st.columns(3)
+                                with cols[0]:
+                                    if st.button("Edit", key=f"edit_{program['id']}"):
+                                        st.session_state.edit_program_id = program['id']
+                                        st.rerun()
+                                with cols[1]:
+                                    if st.button("Delete", key=f"delete_{program['id']}"):
+                                        delete_response = make_authenticated_request(
+                                            "DELETE", f"/api/programs/{program['id']}"
+                                        )
+                                        if delete_response and delete_response.status_code == 200:
+                                            st.success("Program deleted successfully!")
+                                            st.rerun()
+                                        elif delete_response:
+                                            st.error(
+                                                f"Failed to delete: {delete_response.json().get('message', 'Unknown error')}")
                     else:
-                        st.error("Search failed. Please try again.")
-                except requests.exceptions.ConnectionError:
-                    st.error("Could not connect to the server. Please try again later.")
+                        st.info("No programs found")
+                elif response:
+                    st.error(f"Failed to load programs: {response.json().get('message', 'Unknown error')}")
 
-    with advanced_tab:
-        with st.form("advanced_search"):
-            cols = st.columns(2)
-            with cols[0]:
-                first_name = st.text_input("First Name")
-                gender = st.selectbox("Gender", ["Any", "Male", "Female", "Other"])
-            with cols[1]:
-                last_name = st.text_input("Last Name")
-                program = st.selectbox("Enrolled in Program", ["Any", "TB", "HIV", "Malaria", "Other"])
+        with tab2:
+            with st.form("add_program_form"):
+                name = st.text_input("Program Name*")
+                description = st.text_area("Description")
+                is_active = st.checkbox("Active", value=True)
 
-            date_cols = st.columns(2)
-            with date_cols[0]:
-                reg_from = st.date_input("Registered from", value=None)
-            with date_cols[1]:
-                reg_to = st.date_input("Registered to", value=None)
+                submitted = st.form_submit_button("Add Program")
+                if submitted:
+                    if name:
+                        with st.spinner("Adding program..."):
+                            response = make_authenticated_request(
+                                "POST", "/api/programs",
+                                json={
+                                    "name": name,
+                                    "description": description,
+                                    "is_active": is_active
+                                }
+                            )
 
-            submitted = st.form_submit_button("Advanced Search", type="primary")
-            if submitted:
-                st.info("Advanced search functionality would be implemented here")
+                            if response and response.status_code == 201:
+                                st.success("Program added successfully!")
+                                st.rerun()
+                            elif response:
+                                st.error(f"Failed to add program: {response.json().get('message', 'Unknown error')}")
+                    else:
+                        st.warning("Program name is required")
 
-elif choice == "Client Profile":
-    st.subheader("Client Profile")
+    elif st.session_state.menu_choice == "Client Profile":
+        st.subheader("Client Profile")
 
-    client_id = st.text_input("Enter Client ID", key="profile_search", placeholder="Enter the client's unique ID")
+        client_id = st.session_state.get('view_client_id') or st.text_input("Enter Client ID")
 
-    if client_id:
-        try:
-            response = requests.get(f"{BASE_URL}/clients/{client_id}")
-            if response.status_code == 200:
-                client = response.json()
+        if client_id:
+            with st.spinner("Loading client data..."):
+                response = make_authenticated_request("GET", f"/api/clients/{client_id}")
 
-                with st.container():
+                if response and response.status_code == 200:
+                    client = response.json()
+
+                    # Display profile header
                     cols = st.columns([1, 3])
                     with cols[0]:
-                        st.image("https://via.placeholder.com/150?text=Profile", width=150, use_column_width=True, output_format="PNG")
+                        st.image("https://via.placeholder.com/150?text=Profile", width=150)
                     with cols[1]:
-                        st.markdown(f"# {client.get('name', 'Unknown Client')}")
+                        st.markdown(f"# {client.get('first_name', '')} {client.get('last_name', '')}")
                         st.markdown(f"**ID:** {client.get('id', 'N/A')} | **Phone:** {client.get('phone', 'N/A')}")
-                        st.markdown(f"**Address:** {client.get('address', 'No address')}")
 
-                tab1, tab2, tab3, tab4 = st.tabs(["📋 Overview", "🏥 Programs", "📅 Visits", "📂 Documents"])
+                    # Tabs for different sections
+                    tab1, tab2, tab3 = st.tabs(["📋 Profile", "🏥 Programs", "📅 Visits"])
 
-                with tab1:
-                    cols = st.columns(3)
-                    with cols[0]:
-                        st.markdown("**Personal Information**")
-                        st.write(f"🎂 DOB: {client.get('dob', 'Unknown')}")
-                        st.write(f"🧑 Gender: {client.get('gender', 'Unknown')}")
-                    with cols[1]:
-                        st.markdown("**Contact Details**")
-                        st.write(f"📞 Phone: {client.get('phone', 'N/A')}")
-                        st.write(f"✉️ Email: {client.get('email', 'N/A')}")
-                    with cols[2]:
-                        st.markdown("**Emergency Contact**")
-                        st.write(f"👤 Name: {client.get('emergency_contact', {}).get('name', 'N/A')}")
-                        st.write(f"📱 Phone: {client.get('emergency_contact', {}).get('phone', 'N/A')}")
+                    with tab1:
+                        # Personal information
+                        cols = st.columns(2)
+                        with cols[0]:
+                            st.markdown("### Personal Information")
+                            st.write(f"**Date of Birth:** {client.get('dob', 'N/A')}")
+                            st.write(f"**Gender:** {client.get('gender', 'N/A')}")
+                            st.write(f"**Address:** {client.get('address', 'N/A')}")
+                        with cols[1]:
+                            st.markdown("### Emergency Contact")
+                            st.write(f"**Name:** {client.get('emergency_contact_name', 'N/A')}")
+                            st.write(f"**Phone:** {client.get('emergency_contact_phone', 'N/A')}")
+                            st.write(f"**Notes:** {client.get('notes', 'None')}")
 
-                with tab2:
-                    if client.get("programs"):
-                        for program in client["programs"]:
-                            with st.expander(f"{program.get('name', 'Unknown Program')} - {program.get('status', 'Active')}"):
-                                st.write(f"📅 Enrolled: {program.get('enrollment_date', 'Unknown')}")
-                                st.write(f"📊 Progress:")
-                                st.progress(program.get('progress', 0))
-                                if program.get('notes'):
-                                    st.write(f"📝 Notes: {program.get('notes')}")
+                    with tab2:
+                        # Program enrollment
+                        st.markdown("### Enrolled Programs")
+                        programs_response = make_authenticated_request("GET", f"/api/clients/{client_id}/programs")
+
+                        if programs_response and programs_response.status_code == 200:
+                            programs = programs_response.json()
+                            if programs:
+                                for program in programs:
+                                    with st.expander(
+                                            f"{program.get('program', {}).get('name', 'Unknown')} - {program.get('status', 'Active')}"):
+                                        st.write(f"**Enrolled:** {program.get('enrollment_date', 'N/A')}")
+                                        st.write(f"**Progress:**")
+                                        st.progress(program.get('progress', 0) / 100)
+                                        if program.get('notes'):
+                                            st.write(f"**Notes:** {program['notes']}")
+                            else:
+                                st.info("Client is not enrolled in any programs")
+
+                        # Enroll in new program
+                        with st.form("enroll_form"):
+                            available_programs_response = make_authenticated_request("GET", "/api/programs")
+                            available_programs = []
+                            if available_programs_response and available_programs_response.status_code == 200:
+                                available_programs = [(p['id'], p['name']) for p in available_programs_response.json()]
+
+                            selected_programs = st.multiselect(
+                                "Available Programs",
+                                options=[p[1] for p in available_programs],
+                                format_func=lambda x: x
+                            )
+
+                            if st.form_submit_button("Enroll in Selected Programs"):
+                                if selected_programs:
+                                    program_ids = [p[0] for p in available_programs if p[1] in selected_programs]
+                                    enroll_response = make_authenticated_request(
+                                        "POST", f"/api/clients/{client_id}/enroll",
+                                        json={"program_ids": program_ids}
+                                    )
+
+                                    if enroll_response and enroll_response.status_code == 201:
+                                        st.success("Enrollment successful!")
+                                        st.rerun()
+                                    elif enroll_response:
+                                        st.error(
+                                            f"Enrollment failed: {enroll_response.json().get('message', 'Unknown error')}")
+                                else:
+                                    st.warning("Please select at least one program")
+
+                    with tab3:
+                        # Visit history
+                        st.markdown("### Visit History")
+                        visits_response = make_authenticated_request("GET", f"/api/visits/client/{client_id}")
+
+                        if visits_response and visits_response.status_code == 200:
+                            visits = visits_response.json()
+                            if visits:
+                                for visit in visits:
+                                    with st.expander(f"Visit on {visit.get('visit_date', 'N/A')}"):
+                                        st.write(f"**Purpose:** {visit.get('purpose', 'N/A')}")
+                                        st.write(f"**Diagnosis:** {visit.get('diagnosis', 'N/A')}")
+                                        st.write(f"**Treatment:** {visit.get('treatment', 'N/A')}")
+                                        if visit.get('notes'):
+                                            st.write(f"**Notes:** {visit['notes']}")
+                            else:
+                                st.info("No visit history found")
+
+                        # Add new visit
+                        with st.form("new_visit_form"):
+                            st.markdown("### Record New Visit")
+                            purpose = st.text_input("Purpose*")
+                            diagnosis = st.text_area("Diagnosis")
+                            treatment = st.text_area("Treatment")
+                            visit_notes = st.text_area("Notes")
+
+                            if st.form_submit_button("Save Visit"):
+                                if purpose:
+                                    new_visit_response = make_authenticated_request(
+                                        "POST", f"/api/visits/client/{client_id}",
+                                        json={
+                                            "purpose": purpose,
+                                            "diagnosis": diagnosis,
+                                            "treatment": treatment,
+                                            "notes": visit_notes
+                                        }
+                                    )
+
+                                    if new_visit_response and new_visit_response.status_code == 201:
+                                        st.success("Visit recorded successfully!")
+                                        st.rerun()
+                                    elif new_visit_response:
+                                        st.error(
+                                            f"Failed to record visit: {new_visit_response.json().get('message', 'Unknown error')}")
+                                else:
+                                    st.warning("Purpose is required")
+
+                elif response:
+                    st.error(f"Failed to load client: {response.json().get('message', 'Unknown error')}")
+
+    elif st.session_state.menu_choice == "Admin":
+        st.subheader("Administration Panel")
+
+        if st.session_state.current_user.get('role') != 'admin':
+            st.warning("You don't have permission to access this section")
+            st.session_state.menu_choice = "Dashboard"
+            st.rerun()
+
+        tab1, tab2 = st.tabs(["User Management", "System Settings"])
+
+        with tab1:
+            st.markdown("### User Management")
+
+            with st.form("register_user_form"):
+                st.markdown("#### Register New User")
+                username = st.text_input("Username*")
+                email = st.text_input("Email*")
+                password = st.text_input("Password*", type="password")
+                role = st.selectbox("Role", ["user", "admin"])
+
+                if st.form_submit_button("Register User"):
+                    if username and email and password:
+                        with st.spinner("Registering user..."):
+                            response = make_authenticated_request(
+                                "POST", "/api/auth/register",
+                                json={
+                                    "username": username,
+                                    "email": email,
+                                    "password": password,
+                                    "role": role
+                                }
+                            )
+
+                            if response and response.status_code == 201:
+                                st.success("User registered successfully!")
+                            elif response:
+                                st.error(f"Registration failed: {response.json().get('message', 'Unknown error')}")
                     else:
-                        st.info("This client is not enrolled in any programs")
-                        st.button("Enroll in Program", key="enroll_from_profile")
-
-                with tab3:
-                    st.info("Visit history would be displayed here")
-                    st.button("Record New Visit", key="new_visit")
-
-                with tab4:
-                    st.info("Client documents would be listed here")
-                    st.button("Upload Document", key="upload_doc")
-
-            else:
-                st.error("Client not found. Please check the ID.")
-        except requests.exceptions.ConnectionError:
-            st.error("Could not connect to the server. Please try again later.")
+                        st.warning("Please fill all required fields (*)")
 
 # Footer
 st.markdown("---")
@@ -358,8 +519,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Backend connection check
-try:
-    requests.get(f"{BASE_URL}/clients")
-except requests.exceptions.ConnectionError:
-    st.error("🚨 Cannot connect to the backend server! Please ensure the backend service is running.")
-    st.stop()
+if st.session_state.token:
+    with st.spinner("Checking backend connection..."):
+        response = make_authenticated_request("GET", "/api/health")
+        if not response:
+            st.error("🚨 Cannot connect to the backend server! Please ensure the backend service is running.")
+            st.stop()
