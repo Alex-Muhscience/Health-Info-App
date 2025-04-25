@@ -5,7 +5,7 @@ from backend.schemas import visit_schema, visits_schema
 from backend.utils.auth import token_required
 from datetime import datetime
 
-visits_bp = Blueprint('visits', __name__)
+visits_bp = Blueprint('visits', __name__, url_prefix='/api/visits')
 
 
 @visits_bp.route('/client/<client_id>', methods=['GET', 'POST'])

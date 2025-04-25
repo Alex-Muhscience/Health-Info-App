@@ -4,7 +4,8 @@ from backend import db
 from backend.schemas import program_schema, programs_schema
 from backend.utils.auth import token_required
 
-programs_bp = Blueprint('programs', __name__)
+programs_bp = Blueprint('programs', __name__, url_prefix='/api/programs')
+
 
 
 @programs_bp.route('/', methods=['GET', 'POST'])

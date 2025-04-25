@@ -63,7 +63,9 @@ def create_app():
     from backend.routes.clients import clients_bp
     from backend.routes.programs import programs_bp
     from backend.routes.visits import visits_bp
+    from backend.routes.system import system_bp
 
+    app.register_blueprint(system_bp, url_prefix='/api')
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(clients_bp, url_prefix='/api/clients')
     app.register_blueprint(programs_bp, url_prefix='/api/programs')

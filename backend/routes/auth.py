@@ -1,25 +1,21 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from backend.models import User
 from backend import db
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from datetime import datetime, timedelta
 from backend.schemas import user_schema
-from backend.utils.auth import token_required
 
-auth_bp = Blueprint('auth', __name__)
-
+auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-
     if not data or not data.get('username') or not data.get('email') or not data.get('password'):
         return jsonify({'message': 'Username, email and password are required!'}), 400
 
     if User.query.filter_by(username=data['username']).first():
         return jsonify({'message': 'Username already exists!'}), 400
-
     if User.query.filter_by(email=data['email']).first():
         return jsonify({'message': 'Email already exists!'}), 400
 
@@ -37,16 +33,13 @@ def register():
 
     return jsonify({'message': 'User created successfully!'}), 201
 
-
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-
     if not data or not data.get('username') or not data.get('password'):
         return jsonify({'message': 'Username and password are required!'}), 400
 
     user = User.query.filter_by(username=data['username']).first()
-
     if not user:
         return jsonify({'message': 'User not found!'}), 404
 
@@ -54,7 +47,7 @@ def login():
         token = jwt.encode({
             'id': user.id,
             'exp': datetime.utcnow() + timedelta(hours=1)
-        }, 'your-secret-key-here')
+        }, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
 
         return jsonify({
             'token': token,
