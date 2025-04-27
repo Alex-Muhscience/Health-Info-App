@@ -170,21 +170,61 @@ The system is deployed on [Heroku/Render] (e.g., `https://health-system-example.
 
 ## Project Structure
 ```
-health-information-system/
-├── app.py                  # Flask backend entry point
-├── frontend/
-│   ├── app.py            # Streamlit frontend entry point
-│   └── static/
-│       └── styles.css    # Separated CSS for UI
-├── models/                 # SQLAlchemy models (Client, Program, Enrollment)
-├── routes/                 # Flask API routes
-├── tests/                  # Unit and integration tests
-├── .env                    # Environment variables (not committed)
-├── requirements.txt        # Python dependencies
-├── prototype_demo.mp4      # Prototype demonstration video
-├── presentation.pptx       # PowerPoint presentation
-├── README.md               # Project documentation
-└── .gitignore              # Git ignore file
+Health App/
+├── .github/                  # GitHub workflow configurations
+├── .godo/                    # GoDo task runner configurations
+├── assets/                   # Static assets
+│   └── logo.png              # Application logo
+├── backend/                  # Backend (Flask) source code
+│   ├── routes/               # Flask route handlers
+│   │   ├── __init__.py
+│   │   ├── appointments.py   # Appointment-related routes
+│   │   ├── auth.py           # Authentication routes
+│   │   ├── clients.py        # Client management routes
+│   │   ├── programs.py       # Program management routes
+│   │   ├── system.py         # System-wide routes (e.g., stats)
+│   │   └── visits.py         # Visit tracking routes
+│   ├── utils/                # Backend utility modules
+│   │   ├── __init__.py
+│   │   ├── auth.py           # Authentication helpers
+│   │   ├── helpers.py        # General helper functions
+│   │   └── rate_limit.py     # Rate limiting utilities
+│   ├── __init__.py           # Backend package initialization
+│   ├── app.py                # Main Flask application
+│   ├── config.py             # Configuration settings
+│   ├── Dockerfile            # Docker configuration for backend
+│   ├── init_db.py            # Database initialization script
+│   └── models.py             # Database models (SQLAlchemy)
+├── frontend/                 # Frontend (Streamlit) source code
+│   ├── assets/               # Frontend static assets
+│   │   ├── __init__.py
+│   │   └── style.css         # Custom CSS styles
+│   ├── components/           # Streamlit page components
+│   │   ├── __init__.py
+│   │   ├── appointments.py   # Appointments page component
+│   │   ├── auth.py           # Authentication component
+│   │   ├── clients.py        # Clients page component
+│   │   ├── dashboard.py      # Dashboard page component
+│   │   ├── programs.py       # Programs page component
+│   │   └── visits.py         # Visits page component
+│   ├── utils/                # Frontend utility modules
+│   │   ├── __init__.py
+│   │   └── helpers.py        # General helper functions
+│   ├── __init__.py           # Frontend package initialization
+│   ├── app.py                # Main Streamlit application
+│   └── Dockerfile            # Docker configuration for frontend
+├── instance/                 # Instance-specific data (e.g., SQLite DB)
+├── tests/                    # Test cases (currently empty)
+├── uploaded_files/           # Directory for uploaded files (if any)
+├── venv/                     # Virtual environment directory
+├── .env                      # Environment variables
+├── .gitignore                # Git ignore file
+├── app.log                   # Application logs
+├── docker-compose.yml        # Docker Compose configuration
+├── keygen.py                 # Key generation script (if applicable)
+├── qodana.yaml               # Qodana configuration for code quality
+├── README.md                 # Project documentation
+└── requirements.txt          # Python dependencies
 ```
 
 ## Future Enhancements
