@@ -1,175 +1,135 @@
 from flask import Blueprint, request, jsonify, current_app
-from werkzeug.security import generate_password_hash, check_password_hash
-import jwt
-from datetime import datetime, timedelta
+from backend import db, jwt
 from backend.models import User
-from backend import db
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime, timedelta
+import jwt as pyjwt
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, jwt_required
 from backend.schemas import user_schema
-from backend.utils.validators import Validators
+from backend.utils.auth import token_required, admin_required
+from backend.utils.helpers import validate_email, validate_password
+from backend.utils.rate_limit import limiter
+import logging
 
-from backend.utils.auth import token_required
-
-auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
+auth_bp = Blueprint('auth', __name__)
+logger = logging.getLogger(__name__)
 
 
 @auth_bp.route('/register', methods=['POST'])
-def register():
-    """
-    Register a new user
-    ---
-    tags:
-      - Authentication
-    parameters:
-      - in: body
-        name: body
-        required: true
-        schema:
-          type: object
-          properties:
-            username:
-              type: string
-            email:
-              type: string
-            password:
-              type: string
-            role:
-              type: string
-              enum: [user, admin]
-              default: user
-    responses:
-      201:
-        description: User created
-      400:
-        description: Invalid input
-      409:
-        description: User already exists
-    """
-    data = request.get_json()
+@admin_required
+@limiter.limit("5 per minute")
+def register(current_user):
+    """Register a new user (admin only)"""
+    try:
+        data = request.get_json()
 
-    # Validation
-    if not data or not all(k in data for k in ['username', 'email', 'password']):
-        return jsonify({'message': 'Missing required fields'}), 400
+        # Validate input
+        required_fields = ['username', 'email', 'password', 'role']
+        if not all(field in data for field in required_fields):
+            logger.warning("Missing required fields in registration")
+            return jsonify({'error': 'Missing required fields'}), 400
 
-    if not Validators.validate_email(data['email']):
-        return jsonify({'message': 'Invalid email format'}), 400
+        # Check for existing user
+        if User.query.filter_by(username=data['username']).first():
+            logger.warning(f"Username already exists: {data['username']}")
+            return jsonify({'error': 'Username already exists'}), 409
 
-    if not Validators.validate_password(data['password']):
-        return jsonify(
-            {'message': 'Password must be at least 8 characters with uppercase, lowercase, and numbers'}), 400
+        if User.query.filter_by(email=data['email']).first():
+            logger.warning(f"Email already exists: {data['email']}")
+            return jsonify({'error': 'Email already exists'}), 409
 
-    # Check for existing user
-    if User.query.filter_by(username=data['username']).first():
-        return jsonify({'message': 'Username already exists'}), 409
+        if not validate_email(data['email']):
+            logger.warning(f"Invalid email format: {data['email']}")
+            return jsonify({'error': 'Invalid email format'}), 400
 
-    if User.query.filter_by(email=data['email']).first():
-        return jsonify({'message': 'Email already exists'}), 409
+        if not validate_password(data['password']):
+            logger.warning("Password validation failed")
+            return jsonify({
+                'error': 'Password must be 8+ chars with mix of letters, numbers and symbols'
+            }), 400
 
-    # Create user
-    hashed_password = generate_password_hash(
-        data['password'],
-        method='pbkdf2:sha256',
-        salt_length=16
-    )
+        # Create new user
+        hashed_password = generate_password_hash(
+            data['password'],
+            method=current_app.config['PASSWORD_HASH_SCHEME'],
+            salt_length=current_app.config['PASSWORD_SALT_LENGTH']
+        )
 
-    new_user = User(
-        username=data['username'],
-        email=data['email'],
-        password=hashed_password,
-        role=data.get('role', 'user')
-    )
+        new_user = User(
+            username=data['username'],
+            email=data['email'],
+            password=hashed_password,
+            role=data['role'].lower(),
+            is_active=True
+        )
 
-    db.session.add(new_user)
-    db.session.commit()
+        db.session.add(new_user)
+        db.session.commit()
 
-    # Generate token
-    token = jwt.encode({
-        'id': new_user.id,
-        'exp': datetime.utcnow() + timedelta(hours=current_app.config.get('JWT_EXPIRATION_HOURS', 1))
-    }, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
+        logger.info(f"New user created: {data['username']}")
+        return jsonify({
+            'message': 'User created successfully',
+            'user': user_schema.dump(new_user)
+        }), 201
 
-    return jsonify({
-        'message': 'User created successfully',
-        'token': token,
-        'user': user_schema.dump(new_user)
-    }), 201
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Registration failed: {str(e)}", exc_info=True)
+        return jsonify({'error': 'User registration failed'}), 500
+
+
 
 
 @auth_bp.route('/login', methods=['POST'])
+@limiter.limit("10 per minute")
 def login():
-    """
-    Authenticate user
-    ---
-    tags:
-      - Authentication
-    parameters:
-      - in: body
-        name: body
-        required: true
-        schema:
-          type: object
-          properties:
-            username:
-              type: string
-            password:
-              type: string
-    responses:
-      200:
-        description: Login successful
-      400:
-        description: Invalid input
-      401:
-        description: Invalid credentials
-      404:
-        description: User not found
-    """
-    data = request.get_json()
+    try:
+        data = request.get_json()
+        if not data or not data.get('username') or not data.get('password'):
+            return jsonify({'error': 'Username and password required'}), 400
 
-    if not data or not all(k in data for k in ['username', 'password']):
-        return jsonify({'message': 'Username and password required'}), 400
+        user = User.query.filter_by(username=data['username']).first()
+        if not user or not check_password_hash(user.password, data['password']):
+            return jsonify({'error': 'Invalid credentials'}), 401
 
-    user = User.query.filter_by(username=data['username']).first()
-    if not user:
-        return jsonify({'message': 'Invalid credentials'}), 401  # Don't reveal user existence
+        if not user.is_active:
+            return jsonify({'error': 'Account disabled'}), 403
 
-    if not check_password_hash(user.password, data['password']):
-        return jsonify({'message': 'Invalid credentials'}), 401
+        # Use Flask-JWT-Extended's token creation
+        access_token = create_access_token(
+            identity=user.id,
+            additional_claims={'role': user.role}
+        )
+        refresh_token = create_refresh_token(identity=user.id)
 
-    token = jwt.encode({
-        'id': user.id,
-        'role': user.role,
-        'exp': datetime.utcnow() + timedelta(hours=current_app.config.get('JWT_EXPIRATION_HOURS', 1))
-    }, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
+        return jsonify({
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+            'user': user_schema.dump(user)
+        }), 200
 
-    return jsonify({
-        'token': token,
-        'user': user_schema.dump(user),
-        'expires_in': current_app.config.get('JWT_EXPIRATION_HOURS', 1) * 3600
-    })
+    except Exception as e:
+        logger.error(f"Login error: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Internal server error'}), 500
 
 
 @auth_bp.route('/refresh', methods=['POST'])
-@token_required
-def refresh_token(current_user):
-    """
-    Refresh JWT token
-    ---
-    tags:
-      - Authentication
-    security:
-      - BearerAuth: []
-    responses:
-      200:
-        description: New token generated
-      401:
-        description: Unauthorized
-    """
-    token = jwt.encode({
-        'id': current_user.id,
-        'role': current_user.role,
-        'exp': datetime.utcnow() + timedelta(hours=current_app.config.get('JWT_EXPIRATION_HOURS', 1))
-    }, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
+@jwt_required(refresh=True)
+def refresh():
+    current_user = get_jwt_identity()
+    new_token = create_access_token(
+        identity=current_user,
+        additional_claims={'role': User.query.get(current_user).role}
+    )
+    return jsonify(access_token=new_token), 200
 
-    return jsonify({
-        'token': token,
-        'expires_in': current_app.config.get('JWT_EXPIRATION_HOURS', 1) * 3600
-    })
+
+@auth_bp.route('/me', methods=['GET'])
+@token_required
+def get_me(current_user):
+    """Get current user profile"""
+    try:
+        return jsonify(user_schema.dump(current_user)), 200
+    except Exception as e:
+        logger.error(f"Failed to get user profile: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to retrieve user profile'}), 500

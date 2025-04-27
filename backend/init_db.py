@@ -1,202 +1,137 @@
-#!/usr/bin/env python3
-"""Database initialization script for Health App backend."""
 import sys
 from datetime import date
-from typing import Optional
-
 from werkzeug.security import generate_password_hash
-
 from backend import db, create_app
-from backend.models import (
-    User, Client, Program, ClientProgram,
-    ActivityLog
+from backend.models import User, Client, Program
+from backend.config import Config
+import logging
+from typing import List, Dict, Any
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
 )
+logger = logging.getLogger(__name__)
 
-
-def print_header(message: str) -> None:
-    """Print formatted header message."""
-    print(f"\n{'=' * 50}")
-    print(f"🛠️  {message.upper()}")
-    print(f"{'=' * 50}")
-
-
-def print_success(message: str, count: Optional[int] = None) -> None:
-    """Print success message with optional count."""
-    if count is not None:
-        print(f"✅ [{count}] {message}")
-    else:
-        print(f"✅ {message}")
-
-
-def print_warning(message: str) -> None:
-    """Print warning message."""
-    print(f"⚠️  {message}")
+DEFAULT_PROGRAMS: List[Dict[str, str]] = [
+    {'name': 'TB Treatment', 'description': 'Tuberculosis treatment program'},
+    {'name': 'HIV Care', 'description': 'HIV management and care program'},
+    {'name': 'Malaria Prevention', 'description': 'Malaria prevention and treatment'},
+    {'name': 'Maternal Health', 'description': 'Prenatal and postnatal care'},
+    {'name': 'Child Immunization', 'description': 'Childhood vaccination program'},
+    {'name': 'Nutrition Support', 'description': 'Nutritional counseling and support'},
+    {'name': 'Chronic Disease Management', 'description': 'Management of chronic conditions'}
+]
 
 
 def create_default_programs() -> int:
-    """Create default health programs if they don't exist."""
-    default_programs = [
-        {
-            'name': 'TB Treatment',
-            'description': 'Tuberculosis treatment program',
-            'duration_days': 180,
-            'requirements': 'Diagnosis confirmation'
-        },
-        {
-            'name': 'HIV Care',
-            'description': 'HIV management and care program',
-            'duration_days': None,  # Ongoing
-            'requirements': 'Lab confirmation'
-        },
-        {
-            'name': 'Malaria Prevention',
-            'description': 'Malaria prevention and treatment',
-            'duration_days': 30,
-            'requirements': 'None'
-        },
-        {
-            'name': 'Maternal Health',
-            'description': 'Prenatal and postnatal care',
-            'duration_days': 270,
-            'requirements': 'Pregnancy confirmation'
-        },
-        {
-            'name': 'Child Immunization',
-            'description': 'Childhood vaccination program',
-            'duration_days': 365 * 2,
-            'requirements': 'Child under 5 years'
-        },
-        {
-            'name': 'Nutrition Support',
-            'description': 'Nutritional counseling and support',
-            'duration_days': 90,
-            'requirements': 'Nutritional assessment'
-        },
-        {
-            'name': 'Chronic Disease Management',
-            'description': 'Management of chronic conditions',
-            'duration_days': None,  # Ongoing
-            'requirements': 'Diagnosis confirmation'
-        }
-    ]
-
-    created = 0
-    for data in default_programs:
-        if not Program.query.filter_by(name=data['name']).first():
-            program = Program(**data)
+    """Create default health programs in the database."""
+    programs_created = 0
+    for program_data in DEFAULT_PROGRAMS:
+        if not Program.query.filter_by(name=program_data['name']).first():
+            program = Program(**program_data)
             db.session.add(program)
-            created += 1
-    return created
+            programs_created += 1
+            logger.info(f"Created program: {program_data['name']}")
+    return programs_created
 
 
 def create_admin_user() -> bool:
-    """Create default admin user if not exists."""
+    """Create the default admin user if it doesn't exist."""
     if User.query.filter_by(username='admin').first():
         return False
 
+    # Get admin credentials from environment or use defaults
+    admin_username = Config.get('DEFAULT_ADMIN_USERNAME', 'admin')
+    admin_email = Config.get('DEFAULT_ADMIN_EMAIL', 'admin@healthsystem.org')
+    admin_password = Config.get('DEFAULT_ADMIN_PASSWORD')
+
+    if not admin_password:
+        logger.warning("No admin password set in environment. Using default (change in production!)")
+        admin_password = 'admin123'  # This should be changed immediately after setup
+
+    hashed_password = generate_password_hash(
+        admin_password,
+        method=Config.get('PASSWORD_HASH_SCHEME', 'pbkdf2:sha256'),
+        salt_length=Config.get_int('PASSWORD_SALT_LENGTH', 16)
+    )
+
     admin = User(
-        username='admin',
-        email='admin@healthsystem.org',
-        password=generate_password_hash('Admin@1234', method='pbkdf2:sha256:600000'),
+        username=admin_username,
+        email=admin_email,
+        password=hashed_password,
         role='admin',
         is_active=True
     )
     db.session.add(admin)
+    logger.info(f"Admin user created: {admin_username}")
     return True
 
 
-def create_test_data(app) -> None:
-    """Create test data for development environment."""
-    if app.config.get('FLASK_ENV') != 'development':
-        return
+def create_test_client() -> bool:
+    """Create a test client in development environment."""
+    if Client.query.first():
+        return False
 
-    # Test client
-    if not Client.query.first():
-        test_client = Client(
-            first_name='Test',
-            last_name='Patient',
-            dob=date(1990, 1, 1),
-            gender='Other',
-            phone='+1234567890',
-            email='test@healthsystem.org',
-            address='123 Test St, Testville',
-            emergency_contact_name='Test Contact',
-            emergency_contact_phone='+1987654321',
-            medical_history='None',
-            allergies='None'
-        )
-        db.session.add(test_client)
-        print_success("Test client created")
-
-    # Test programs for client
-    client = Client.query.first()
-    if client and not ClientProgram.query.first():
-        programs = Program.query.limit(3).all()
-        for program in programs:
-            enrollment = ClientProgram(
-                client_id=client.id,
-                program_id=program.id,
-                enrollment_date=date.today(),
-                status='active'
-            )
-            db.session.add(enrollment)
-        print_success(f"Added {len(programs)} test program enrollments")
-
-
-def log_initialization() -> None:
-    """Log the initialization event."""
-    activity = ActivityLog(
-        user_id=None,  # System action
-        action='system_init',
-        entity='database',
-        details={'action': 'initial_setup'},
-        ip_address='127.0.0.1',
-        user_agent='init_db.py'
+    test_client = Client(
+        first_name='Test',
+        last_name='Patient',
+        dob=date(1990, 1, 1),
+        gender='other',
+        phone='+1234567890',
+        email='test@healthsystem.org',
+        is_active=True
     )
-    db.session.add(activity)
+    db.session.add(test_client)
+    logger.info("Test client created")
+    return True
 
 
 def init_db() -> None:
-    """Initialize the database with required data."""
+    """Initialize the database and populate it with default data."""
     app = create_app()
 
     with app.app_context():
         try:
-            print_header("Database Initialization Started")
+            logger.info("Starting database initialization...")
 
-            # Create tables
+            # Create all tables
+            logger.info("Creating database tables...")
             db.create_all()
-            print_success("Database tables created")
+            logger.info("Tables created successfully")
 
             # Add default programs
             programs_created = create_default_programs()
-            if programs_created:
-                print_success("Default programs added", programs_created)
-            else:
-                print_warning("Default programs already exist")
+            logger.info(f"Added {programs_created} default programs")
 
             # Create admin user
-            if create_admin_user():
-                print_success("Admin user created (username: admin, password: Admin@1234)")
-                print_warning("CHANGE THE DEFAULT ADMIN PASSWORD IMMEDIATELY!")
-            else:
-                print_warning("Admin user already exists")
+            admin_created = create_admin_user()
+            if not admin_created:
+                logger.info("Admin user already exists")
 
-            # Development test data
-            create_test_data(app)
-
-            # Log initialization
-            log_initialization()
+            # Create test data in development
+            if app.config['FLASK_ENV'] == 'development':
+                test_client_created = create_test_client()
+                if not test_client_created:
+                    logger.info("Test client already exists")
 
             # Commit all changes
             db.session.commit()
-            print_header("Database Initialization Completed Successfully")
+            logger.info("✅ Database initialized successfully!")
 
         except Exception as e:
             db.session.rollback()
-            print(f"\n❌ CRITICAL ERROR: {str(e)}", file=sys.stderr)
+            logger.error(f"❌ Error initializing database: {str(e)}", exc_info=True)
             sys.exit(1)
 
 
 if __name__ == '__main__':
-    init_db()
+    try:
+        init_db()
+    except KeyboardInterrupt:
+        logger.info("Database initialization cancelled by user")
+        sys.exit(0)

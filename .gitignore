@@ -1,2 +1,5 @@
 .qodo
 .env
+.venv
+.github
+qodana.yaml
