@@ -175,14 +175,14 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     from backend.routes.clients import clients_bp
     from backend.routes.programs import programs_bp
     from backend.routes.visits import visits_bp
-    from backend.routes.system import system_bp
+    from backend.routes.dashboard import system_bp
     from backend.routes.appointments import appointments_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(clients_bp, url_prefix='/api/clients')
     app.register_blueprint(programs_bp, url_prefix='/api/programs')
     app.register_blueprint(visits_bp, url_prefix='/api/visits')
-    app.register_blueprint(system_bp, url_prefix='/api/system')
+    app.register_blueprint(system_bp, url_prefix='/api/dashboard')
     app.register_blueprint(appointments_bp, url_prefix='/api/appointments')
 
     # Error handlers

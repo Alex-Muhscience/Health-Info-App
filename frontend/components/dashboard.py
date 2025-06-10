@@ -5,117 +5,190 @@ from datetime import datetime, timedelta
 
 
 def get_stats():
-    user_role = st.session_state.current_user['role']
+    """Display dashboard with system statistics and recent activity"""
+    # Check user permissions
+    user_role = st.session_state.get('current_user', {}).get('role')
     allowed_roles = ['admin', 'doctor', 'nurse', 'receptionist']
+    
+    if user_role not in allowed_roles:
+        st.error("You don't have permission to view this dashboard")
+        return
 
     st.title("Dashboard")
     st.markdown("---")
 
-    # Fetch stats
-    stats = make_request("GET", "/stats")
+    # Fetch stats with error handling
+    with st.spinner("Loading dashboard data..."):
+        stats = make_request("GET", "/dashboard/stats")
 
     if not stats:
-        st.error("Failed to load dashboard data")
+        st.error("Failed to load dashboard data. Please check your connection and try again.")
         return
 
-    # Display stats cards
+    # Display stats cards in a more organized layout
+    st.subheader("📊 System Overview")
+    
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Total Active Clients", stats['total_clients'])
+        st.metric(
+            label="Total Active Clients", 
+            value=stats.get('total_clients', 0),
+            help="Number of currently active clients in the system"
+        )
     with col2:
-        st.metric("Active Programs", stats['active_programs'])
+        st.metric(
+            label="Active Programs", 
+            value=stats.get('active_programs', 0),
+            help="Number of currently active programs"
+        )
     with col3:
-        st.metric("New Clients (30 days)", stats['new_clients_last_30_days'])
+        st.metric(
+            label="New Clients (30 days)", 
+            value=stats.get('new_clients_last_30_days', 0),
+            help="New clients registered in the last 30 days"
+        )
 
     col4, col5, col6 = st.columns(3)
     with col4:
-        st.metric("Recent Visits (7 days)", stats['visits_last_7_days'])
-    with col5:
-        st.metric("Upcoming Appointments", stats['upcoming_appointments'])
-    with col6:
         st.metric(
-            "Most Popular Program",
-            stats['most_popular_program']['name'] or "N/A",
-            help=f"{stats['most_popular_program']['enrollments']} enrollments"
+            label="Recent Visits (7 days)", 
+            value=stats.get('visits_last_7_days', 0),
+            help="Total visits in the last 7 days"
+        )
+    with col5:
+        st.metric(
+            label="Upcoming Appointments", 
+            value=stats.get('upcoming_appointments', 0),
+            help="Scheduled appointments for the next 7 days"
+        )
+    with col6:
+        popular_program = stats.get('most_popular_program', {})
+        program_name = popular_program.get('name') or "N/A"
+        enrollments = popular_program.get('enrollments', 0)
+        
+        st.metric(
+            label="Most Popular Program",
+            value=program_name,
+            help=f"{enrollments} total enrollments"
         )
 
     st.markdown("---")
 
     # Recent activity sections
+    st.subheader("📅 Recent Activity")
+    
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("Recent Appointments")
-        appointments = make_request(
+        st.write("**Recent Appointments**")
+        
+        # Calculate date range for recent appointments
+        start_date = (datetime.now() - timedelta(days=7)).isoformat()
+        
+        appointments_response = make_request(
             "GET",
             "/appointments",
             params={
-                "start_date": (datetime.now() - timedelta(days=7)).isoformat(),
+                "start_date": start_date,
                 "per_page": 5
             }
         )
 
-        if appointments and appointments['data']:
-            df = pd.DataFrame(appointments['data'])
-            df['date'] = df['date'].apply(format_datetime)
-            st.dataframe(
-                df[['date', 'client_id', 'reason', 'status']],
-                use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "client_id": "Client ID",
-                    "date": "Date",
-                    "reason": "Reason",
-                    "status": "Status"
-                }
-            )
+        if appointments_response and appointments_response.get('data'):
+            appointments_data = appointments_response['data']
+            
+            # Process appointments data
+            processed_appointments = []
+            for apt in appointments_data:
+                processed_appointments.append({
+                    'Date': format_datetime(apt.get('date', '')),
+                    'Client': apt.get('client_name', f"ID: {apt.get('client_id', 'Unknown')}"),
+                    'Reason': apt.get('reason', 'General appointment'),
+                    'Status': apt.get('status', 'scheduled').title()
+                })
+            
+            if processed_appointments:
+                df_appointments = pd.DataFrame(processed_appointments)
+                st.dataframe(
+                    df_appointments,
+                    use_container_width=True,
+                    hide_index=True
+                )
+            else:
+                st.info("No recent appointments found")
         else:
             st.info("No recent appointments found")
 
     with col2:
-        st.subheader("Recent Visits")
-        visits = make_request(
+        st.write("**Recent Visits**")
+        
+        visits_response = make_request(
             "GET",
             "/visits",
             params={
-                "start_date": (datetime.now() - timedelta(days=7)).isoformat(),
+                "start_date": start_date,
                 "per_page": 5
             }
         )
 
-        if visits and visits['data']:
-            df = pd.DataFrame(visits['data'])
-            df['visit_date'] = df['visit_date'].apply(format_datetime)
-            st.dataframe(
-                df[['visit_date', 'client_id', 'purpose', 'visit_type']],
-                use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "client_id": "Client ID",
-                    "visit_date": "Date",
-                    "purpose": "Purpose",
-                    "visit_type": "Type"
-                }
-            )
+        if visits_response and visits_response.get('data'):
+            visits_data = visits_response['data']
+            
+            # Process visits data
+            processed_visits = []
+            for visit in visits_data:
+                processed_visits.append({
+                    'Date': format_datetime(visit.get('visit_date', '')),
+                    'Client': visit.get('client_name', f"ID: {visit.get('client_id', 'Unknown')}"),
+                    'Purpose': visit.get('purpose', 'General visit'),
+                    'Type': visit.get('visit_type', 'consultation').title()
+                })
+            
+            if processed_visits:
+                df_visits = pd.DataFrame(processed_visits)
+                st.dataframe(
+                    df_visits,
+                    use_container_width=True,
+                    hide_index=True
+                )
+            else:
+                st.info("No recent visits found")
         else:
             st.info("No recent visits found")
 
-    # Quick actions
+    # Quick actions section
     st.markdown("---")
-    st.subheader("Quick Actions")
+    st.subheader("⚡ Quick Actions")
 
     col1, col2, col3 = st.columns(3)
+    
     with col1:
-        if st.button("📅 Schedule New Appointment"):
+        if st.button("📅 Schedule New Appointment", use_container_width=True):
             st.session_state.appointment_action = "create"
-            st.switch_page("pages/appointments.py")
+            st.switch_page("components/appointments.py")
 
     with col2:
-        if st.button("👤 Register New Client"):
+        if st.button("👤 Register New Client", use_container_width=True):
             st.session_state.client_action = "create"
             st.switch_page("pages/clients.py")
 
     with col3:
-        if st.button("🏥 Record New Visit"):
+        if st.button("🏥 Record New Visit", use_container_width=True):
             st.session_state.visit_action = "create"
             st.switch_page("pages/visits.py")
+
+    # Additional system info
+    st.markdown("---")
+    with st.expander("ℹ️ System Information"):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("**Last Updated:**")
+            st.write(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        with col2:
+            st.write("**User Role:**")
+            st.write(user_role.title() if user_role else "Unknown")
+
+
+# Call the function when this module is run
+if __name__ == "__main__":
+    get_stats()

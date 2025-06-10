@@ -96,7 +96,7 @@ class AppointmentSchema(ma.SQLAlchemyAutoSchema):
     date = fields.DateTime(required=True)
     duration_minutes = fields.Integer(
         validate=validate.Range(min=15, max=240),
-        default=30
+        load_default=30
     )
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)

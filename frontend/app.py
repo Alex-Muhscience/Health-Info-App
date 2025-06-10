@@ -6,8 +6,7 @@ from components.clients import get_clients
 from components.appointments import get_appointments
 from components.visits import get_visits
 from components.programs import get_programs
-
-from frontend.utils.helpers import load_css
+from utils.helpers import load_css
 
 # Page configuration
 st.set_page_config(

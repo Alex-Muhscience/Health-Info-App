@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from frontend.utils.helpers import make_request, format_datetime, date_range_filter
+from utils.helpers import make_request, format_datetime, date_range_filter
 from datetime import datetime
 
 VISIT_TYPES = [
