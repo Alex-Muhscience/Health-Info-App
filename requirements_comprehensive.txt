@@ -1,0 +1,102 @@
+# Comprehensive Health Management System Requirements
+# Backend Flask Requirements
+Flask==2.3.3
+Flask-SQLAlchemy==3.0.5
+Flask-Migrate==4.0.5
+Flask-JWT-Extended==4.5.3
+Flask-CORS==4.0.0
+Flask-Marshmallow==0.15.0
+Flask-Limiter==3.5.0
+Flask-Talisman==1.1.0
+Flask-Caching==2.1.0
+
+# Database
+SQLAlchemy==2.0.21
+Alembic==1.12.0
+psycopg2-binary==2.9.7  # PostgreSQL adapter
+sqlite3  # Built-in with Python
+
+# Authentication & Security
+Werkzeug==2.3.7
+PyJWT==2.8.0
+bcrypt==4.0.1
+cryptography==41.0.4
+
+# Serialization
+marshmallow==3.20.1
+marshmallow-sqlalchemy==0.29.0
+
+# Frontend Django Requirements
+Django==4.2.5
+django-cors-headers==4.2.0
+djangorestframework==3.14.0
+
+# HTTP & API
+requests==2.31.0
+urllib3==2.0.4
+
+# Data Processing
+pandas==2.1.1
+numpy==1.25.2
+
+# Date/Time Handling
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Environment Management
+python-dotenv==1.0.0
+
+# Development Tools
+pytest==7.4.2
+pytest-flask==1.2.0
+black==23.7.0
+flake8==6.0.0
+
+# Caching (Redis)
+redis==5.0.0
+hiredis==2.2.3
+
+# Task Queue (Optional)
+celery==5.3.2
+
+# Monitoring & Logging
+structlog==23.1.0
+
+# File Handling
+Pillow==10.0.0
+
+# Email
+Flask-Mail==0.9.1
+
+# Excel Export (Optional)
+openpyxl==3.1.2
+xlsxwriter==3.1.7
+
+# PDF Generation (Optional)
+reportlab==4.0.4
+weasyprint==59.0
+
+# Charts & Visualization (Optional)
+plotly==5.16.1
+matplotlib==3.7.2
+
+# API Documentation (Optional)
+Flask-RESTX==1.1.0
+flasgger==0.9.7.1
+
+# Production Server
+gunicorn==21.2.0
+waitress==2.1.2
+
+# Health Checks
+healthcheck==1.3.3
+
+# UUID Support
+uuid==1.30
+
+# Decimal Precision
+decimal  # Built-in with Python
+
+# Configuration Validation
+cerberus==1.3.5
+pydantic==2.3.0

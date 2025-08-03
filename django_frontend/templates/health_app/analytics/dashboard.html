@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Comprehensive Dashboard - Health Management System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-3 col-sm-6">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Patients</h5>
+                <p class="card-text">{{ data.patient_flow.total_patients }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-sm-6">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Today's Appointments</h5>
+                <p class="card-text">{{ data.patient_flow.today_appointments }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-sm-6">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Income Today</h5>
+                <p class="card-text">{{ data.revenue.daily_income }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-sm-6">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">Pending Admissions</h5>
+                <p class="card-text">{{ data.admissions.pending_admissions }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart and Detailed Analytics -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Detailed Analytics and Insights</h5>
+            </div>
+            <div class="card-body">
+                <!-- Upcoming: Integrate with chart library -->
+                <div class="alert alert-info">Analytics and insights visualization coming soon!</div>
+                <pre>{{ data | json_script:"analytics-data" }}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Health Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="jumbotron bg-primary text-white rounded p-5">
+            <h1 class="display-4">
+                <i class="fas fa-heartbeat me-3"></i>
+                Health Management System
+            </h1>
+            <p class="lead">
+                Comprehensive healthcare management solution with Django frontend and Flask backend.
+            </p>
+            {% if not request.session.flask_token %}
+                <hr class="my-4">
+                <p>Please log in to access the system.</p>
+                <a class="btn btn-light btn-lg" href="{% url 'login' %}" role="button">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
+            {% else %}
+                <hr class="my-4">
+                <p>Welcome back, {{ request.session.flask_user.username|default:"User" }}!</p>
+                <a class="btn btn-light btn-lg" href="{% url 'dashboard' %}" role="button">
+                    <i class="fas fa-dashboard me-2"></i>Go to Dashboard
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if not request.session.flask_token %}
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Patient Management</h5>
+                <p class="card-text">Manage patient records, appointments, and medical history.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Appointment Scheduling</h5>
+                <p class="card-text">Schedule and manage patient appointments efficiently.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-bar fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Analytics & Reports</h5>
+                <p class="card-text">Generate reports and analyze healthcare data.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

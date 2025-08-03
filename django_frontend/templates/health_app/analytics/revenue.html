@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Revenue Analytics{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2>Revenue Analytics</h2>
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4 class="card-title">Daily Revenue</h4>
+        </div>
+        <div class="card-body">
+            <!-- Visualization to be added -->
+            <pre>{{ revenue_data.daily_revenue|json_script:"daily-revenue-data" }}</pre>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4 class="card-title">Service Revenue Breakdown</h4>
+        </div>
+        <div class="card-body">
+            <!-- Visualization to be added -->
+            <pre>{{ revenue_data.service_breakdown|json_script:"service-revenue-data" }}</pre>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4 class="card-title">Outstanding Payments</h4>
+        </div>
+        <div class="card-body">
+            <p>Total Outstanding: {{ revenue_data.outstanding_payments.amount }}</p>
+            <p>Number of Outstanding Records: {{ revenue_data.outstanding_payments.count }}</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Summary</h4>
+        </div>
+        <div class="card-body">
+            <p>Total Revenue in {{ period_days }} Days: {{ revenue_data.total_revenue }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

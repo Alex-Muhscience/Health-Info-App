@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Schedule Appointment - Health Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-calendar-plus me-2"></i>Schedule New Appointment</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'appointments_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to Appointments
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Appointment Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="client_id" class="form-label">Patient <span class="text-danger">*</span></label>
+                            <select class="form-select" id="client_id" name="client_id" required>
+                                <option value="">Select a patient...</option>
+                                {% for client in clients %}
+                                <option value="{{ client.id }}">{{ client.first_name }} {{ client.last_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="date" class="form-label">Date & Time <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" id="date" name="date" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="duration_minutes" class="form-label">Duration (minutes)</label>
+                            <select class="form-select" id="duration_minutes" name="duration_minutes">
+                                <option value="15">15 minutes</option>
+                                <option value="30" selected>30 minutes</option>
+                                <option value="45">45 minutes</option>
+                                <option value="60">1 hour</option>
+                                <option value="90">1.5 hours</option>
+                                <option value="120">2 hours</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Reason for Visit <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="reason" name="reason" 
+                               placeholder="e.g., Regular checkup, Follow-up, Consultation" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Additional Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"
+                                  placeholder="Any additional information or special requirements..."></textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'appointments_list' %}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-calendar-check me-2"></i>Schedule Appointment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>Scheduling Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-clock text-primary me-2"></i>
+                        <small>Standard appointments are 30 minutes</small>
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-calendar text-primary me-2"></i>
+                        <small>Schedule at least 24 hours in advance</small>
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-phone text-primary me-2"></i>
+                        <small>Confirmation calls will be made</small>
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        <small>Emergency cases should call directly</small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

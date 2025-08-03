@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff - Health Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-user-md me-2"></i>Staff Management</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Add Staff Member
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>Staff Directory
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if staff %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Position</th>
+                                    <th>Contact</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for member in staff %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle me-2">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ member.first_name }} {{ member.last_name }}</div>
+                                                <small class="text-muted">{{ member.employee_id|default:"No ID" }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ member.department.name|default:"No Department" }}</td>
+                                    <td>{{ member.position|default:"Not Specified" }}</td>
+                                    <td>
+                                        <div>
+                                            <i class="fas fa-phone me-1"></i>{{ member.phone|default:"No phone" }}
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-envelope me-1"></i>{{ member.email|default:"No email" }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if member.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="View Profile">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip" title="Edit Profile">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Schedule">
+                                                <i class="fas fa-calendar"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-user-md fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Staff Members Found</h4>
+                        <p class="text-muted mb-4">Add staff members to manage your healthcare team.</p>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add First Staff Member
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Staff Statistics -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-primary">{{ staff|length }}</h3>
+                <p class="mb-0">Total Staff</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-success">8</h3>
+                <p class="mb-0">Doctors</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-info">12</h3>
+                <p class="mb-0">Nurses</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-warning">5</h3>
+                <p class="mb-0">Support Staff</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar-circle {
+    width: 35px;
+    height: 35px;
+    background-color: #e9ecef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

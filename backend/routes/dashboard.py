@@ -1,6 +1,11 @@
 from flask import Blueprint, jsonify, request
 from backend import db
-from backend.models import Client, Program, Visit, Appointment, ClientProgram
+from backend.models import (
+    Client, Program, Visit, Appointment, ClientProgram, Staff, Department,
+    MedicalRecord, VitalSigns, Prescription, LabTest, LabOrder, Inventory,
+    Bed, Admission, Billing, BillingItem, InsuranceProvider, User
+)
+from decimal import Decimal
 from datetime import datetime, timedelta
 from sqlalchemy import func, and_
 
@@ -9,54 +14,107 @@ system_bp = Blueprint('system', __name__)
 
 @system_bp.route('/stats', methods=['GET'])
 def get_stats():
-    """Get system statistics and metrics"""
+    """Get comprehensive system statistics and metrics for dashboard"""
     try:
-        # Calculate totals
-        total_clients = Client.query.filter_by(is_active=True).count()
-        total_programs = Program.query.filter_by(is_active=True).count()
-
-        # Time-based calculations
+        # Time calculations
         now = datetime.utcnow()
+        today = now.date()
         last_30_days = now - timedelta(days=30)
         last_7_days = now - timedelta(days=7)
-
-        # Recent activity
-        new_clients = Client.query.filter(
-            Client.created_at >= last_30_days,
-            Client.is_active == True
+        
+        # Basic counts
+        total_clients = Client.query.filter_by(is_active=True).count()
+        total_staff = Staff.query.filter_by(is_active=True).count()
+        total_departments = Department.query.filter_by(is_active=True).count()
+        
+        # Appointments
+        total_appointments = Appointment.query.count()
+        todays_appointments = Appointment.query.filter(
+            func.date(Appointment.date) == today
         ).count()
-
+        
+        # Admissions
+        active_admissions = Admission.query.filter_by(status='active').count()
+        
+        # Lab results
+        pending_lab_results = LabOrder.query.filter(
+            LabOrder.status.in_(['ordered', 'collected', 'processing'])
+        ).count()
+        
+        # Prescriptions
+        active_prescriptions = Prescription.query.filter_by(
+            status='active', dispensed=False
+        ).count()
+        
+        # Billing
+        pending_bills = Billing.query.filter(
+            Billing.status.in_(['pending', 'partially_paid'])
+        ).count()
+        
+        # Inventory - low stock alerts
+        low_stock_items = Inventory.query.filter(
+            Inventory.quantity_in_stock <= Inventory.minimum_stock_level,
+            Inventory.is_active == True
+        ).count()
+        
+        # Emergency cases (appointments with high priority)
+        emergency_cases = Appointment.query.filter(
+            Appointment.priority == 'high',
+            Appointment.status == 'scheduled',
+            Appointment.date >= now
+        ).count()
+        
+        # Monthly revenue calculation
+        current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        monthly_revenue = db.session.query(
+            func.coalesce(func.sum(Billing.paid_amount), 0)
+        ).filter(
+            Billing.created_at >= current_month_start,
+            Billing.status.in_(['paid', 'partially_paid'])
+        ).scalar() or 0
+        
+        # Recent activity counts
         recent_visits = Visit.query.filter(
             Visit.visit_date >= last_7_days
         ).count()
-
-        upcoming_appointments = Appointment.query.filter(
-            Appointment.date >= now,
-            Appointment.date <= now + timedelta(days=7),
-            Appointment.status == 'scheduled'
+        
+        new_clients_this_month = Client.query.filter(
+            Client.created_at >= current_month_start,
+            Client.is_active == True
         ).count()
-
-        # Program enrollment stats
-        popular_program = db.session.query(
-            Program.name,
-            func.count(ClientProgram.id).label('enrollments')
-        ).join(ClientProgram).group_by(Program.id).order_by(
-            func.count(ClientProgram.id).desc()
-        ).first()
-
-        stats = {
+        
+        # Comprehensive dashboard stats
+        dashboard_stats = {
+            # Main metrics
             "total_clients": total_clients,
-            "active_programs": total_programs,
-            "new_clients_last_30_days": new_clients,
+            "todays_appointments": todays_appointments,
+            "active_admissions": active_admissions,
+            "pending_lab_results": pending_lab_results,
+            "active_staff": total_staff,
+            "active_prescriptions": active_prescriptions,
+            "pending_bills": pending_bills,
+            "low_stock_alerts": low_stock_items,
+            "emergency_cases": emergency_cases,
+            "monthly_revenue": float(monthly_revenue),
+            
+            # Additional metrics
+            "total_appointments": total_appointments,
+            "total_departments": total_departments,
+            "recent_visits": recent_visits,
+            "new_clients_this_month": new_clients_this_month,
+            
+            # Legacy compatibility
+            "total_programs": Program.query.filter_by(is_active=True).count(),
             "visits_last_7_days": recent_visits,
-            "upcoming_appointments": upcoming_appointments,
-            "most_popular_program": {
-                "name": popular_program[0] if popular_program else None,
-                "enrollments": popular_program[1] if popular_program else 0
-            }
+            "upcoming_appointments": Appointment.query.filter(
+                Appointment.date >= now,
+                Appointment.date <= now + timedelta(days=7),
+                Appointment.status == 'scheduled'
+            ).count()
         }
-
-        return jsonify(stats), 200
+        
+        return jsonify(dashboard_stats), 200
+        
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

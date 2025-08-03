@@ -10,9 +10,8 @@ from sqlalchemy import or_, and_
 clients_bp = Blueprint('clients', __name__)
 
 
-@clients_bp.route('/clients', methods=['GET'])
-@token_required
-@roles_required(['admin', 'doctor', 'nurse', 'receptionist'])
+@clients_bp.route('/', methods=['GET'])
+@roles_required('admin', 'doctor', 'nurse', 'receptionist')
 def get_clients(current_user):
     """Get paginated list of clients with optional filters"""
     try:
@@ -79,9 +78,8 @@ def get_clients(current_user):
         return jsonify({'error': str(e)}), 500
 
 
-@clients_bp.route('/clients', methods=['POST'])
-@token_required
-@roles_required(['admin', 'doctor', 'nurse', 'receptionist'])
+@clients_bp.route('/', methods=['POST'])
+@roles_required('admin', 'doctor', 'nurse', 'receptionist')
 def create_client(current_user):
     """Create a new client"""
     try:
@@ -139,9 +137,8 @@ def create_client(current_user):
         return jsonify({'error': str(e)}), 500
 
 
-@clients_bp.route('/clients/<int:client_id>', methods=['GET'])
-@token_required
-@roles_required(['admin', 'doctor', 'nurse'])
+@clients_bp.route('/<client_id>', methods=['GET'])
+@roles_required('admin', 'doctor', 'nurse')
 def get_client(current_user, client_id):
     """Get client details by ID"""
     try:
@@ -162,9 +159,8 @@ def get_client(current_user, client_id):
         return jsonify({'error': str(e)}), 500
 
 
-@clients_bp.route('/clients/<int:client_id>', methods=['PUT'])
-@token_required
-@roles_required(['admin', 'doctor', 'nurse'])
+@clients_bp.route('/<client_id>', methods=['PUT'])
+@roles_required('admin', 'doctor', 'nurse')
 def update_client(current_user, client_id):
     """Update client information"""
     try:
@@ -228,9 +224,8 @@ def update_client(current_user, client_id):
         return jsonify({'error': str(e)}), 500
 
 
-@clients_bp.route('/clients/<int:client_id>', methods=['DELETE'])
-@token_required
-@roles_required(['admin'])
+@clients_bp.route('/<client_id>', methods=['DELETE'])
+@roles_required('admin')
 def delete_client(current_user, client_id):
     """Deactivate a client (soft delete)"""
     try:
@@ -252,9 +247,8 @@ def delete_client(current_user, client_id):
         return jsonify({'error': str(e)}), 500
 
 
-@clients_bp.route('/clients/<int:client_id>/programs', methods=['GET'])
-@token_required
-@roles_required(['admin', 'doctor', 'nurse'])
+@clients_bp.route('/<client_id>/programs', methods=['GET'])
+@roles_required('admin', 'doctor', 'nurse')
 def get_client_programs(current_user, client_id):
     """Get programs for a specific client"""
     try:
@@ -278,9 +272,8 @@ def get_client_programs(current_user, client_id):
         return jsonify({'error': str(e)}), 500
 
 
-@clients_bp.route('/clients/<int:client_id>/programs', methods=['POST'])
-@token_required
-@roles_required(['admin', 'doctor', 'nurse'])
+@clients_bp.route('/<client_id>/programs', methods=['POST'])
+@roles_required('admin', 'doctor', 'nurse')
 def enroll_client(current_user, client_id):
     """Enroll client in programs"""
     try:

@@ -6,9 +6,9 @@ from marshmallow import fields, validate, ValidationError
 # Custom Validators
 def validate_visit_type(value):
     """Custom validator for visit types."""
-    valid_types = ['checkup', 'follow_up', 'emergency', 'routine']  # Replace with dynamic logic if needed
-    if value not in valid_types:
-        raise ValidationError(f"Invalid visit type: {value}. Valid types are: {', '.join(valid_types)}.")
+    from backend.models import Visit
+    if value not in Visit.VISIT_TYPES:
+        raise ValidationError(f"Invalid visit type: {value}. Valid types are: {', '.join(Visit.VISIT_TYPES)}.")
 
 
 class UserSchema(ma.SQLAlchemyAutoSchema):

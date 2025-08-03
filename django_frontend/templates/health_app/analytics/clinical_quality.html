@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Clinical Quality Metrics{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2>Clinical Quality Metrics</h2>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h4 class="card-title">Average Length of Stay</h4>
+                </div>
+                <div class="card-body">
+                    <h3>{{ quality_data.average_length_of_stay }} days</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h4 class="card-title">Readmission Rate</h4>
+                </div>
+                <div class="card-body">
+                    <h3>{{ quality_data.readmission_rate }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h4 class="card-title">Lab Turnaround Time</h4>
+                </div>
+                <div class="card-body">
+                    <h3>{{ quality_data.lab_turnaround_hours }} hours</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h4 class="card-title">Prescription Adherence Rate</h4>
+                </div>
+                <div class="card-body">
+                    <h3>{{ quality_data.prescription_adherence_rate }}%</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Period</h4>
+        </div>
+        <div class="card-body">
+            <p>Data for {{ period_days }} days</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

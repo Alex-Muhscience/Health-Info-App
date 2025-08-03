@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block title %}Programs - Health Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-clipboard-list me-2"></i>Health Programs
+            </h1>
+            <button class="btn btn-primary" id="add-program">
+                <i class="fas fa-plus me-2"></i>Add Program
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Program List
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if programs %}
+                    <div class="row">
+                        {% for program in programs %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">{{ program.name }}</h6>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item edit-program" href="#" data-program-id="{{ program.id }}">
+                                                <i class="fas fa-edit me-2"></i>Edit
+                                            </a></li>
+                                            <li><a class="dropdown-item view-enrollments" href="#" data-program-id="{{ program.id }}">
+                                                <i class="fas fa-users me-2"></i>View Enrollments
+                                            </a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger delete-program" href="#" data-program-id="{{ program.id }}">
+                                                <i class="fas fa-trash me-2"></i>Delete
+                                            </a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">{{ program.description|truncatechars:100|default:"No description available." }}</p>
+                                    
+                                    <div class="mb-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar-alt me-1"></i>
+                                            Duration: {{ program.duration_days|default:"N/A" }} days
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-users me-1"></i>
+                                            Enrolled: {{ program.enrolled_clients_count|default:0 }} clients
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        {% if program.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-outline-primary btn-sm enroll-client" data-program-id="{{ program.id }}">
+                                            <i class="fas fa-user-plus me-2"></i>Enroll Client
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Programs Found</h4>
+                        <p class="text-muted">Create health programs to manage client care.</p>
+                        <button class="btn btn-primary" id="add-first-program">
+                            <i class="fas fa-plus me-2"></i>Create First Program
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Program Statistics -->
+{% if programs %}
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{ programs|length }}</h5>
+                <p class="card-text">Total Programs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-success">{{ active_programs_count|default:0 }}</h5>
+                <p class="card-text">Active Programs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-info">{{ total_enrollments|default:0 }}</h5>
+                <p class="card-text">Total Enrollments</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-warning">{{ completed_programs|default:0 }}</h5>
+                <p class="card-text">Completed Programs</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add program functionality
+    $('#add-program, #add-first-program').click(function() {
+        // TODO: Implement program addition modal
+        alert('Open modal to add program');
+    });
+
+    // Edit program functionality
+    $('.edit-program').click(function(e) {
+        e.preventDefault();
+        const programId = $(this).data('program-id');
+        // TODO: Implement edit program modal
+        alert('Edit program ID: ' + programId);
+    });
+
+    // View enrollments functionality
+    $('.view-enrollments').click(function(e) {
+        e.preventDefault();
+        const programId = $(this).data('program-id');
+        // TODO: Implement view enrollments modal
+        alert('View enrollments for program ID: ' + programId);
+    });
+
+    // Enroll client functionality
+    $('.enroll-client').click(function() {
+        const programId = $(this).data('program-id');
+        // TODO: Implement client enrollment modal
+        alert('Enroll client in program ID: ' + programId);
+    });
+
+    // Delete program functionality
+    $('.delete-program').click(function(e) {
+        e.preventDefault();
+        const programId = $(this).data('program-id');
+        if (confirm('Are you sure you want to delete this program? This action cannot be undone.')) {
+            // TODO: Implement delete program functionality
+            alert('Delete program ID: ' + programId);
+        }
+    });
+});
+</script>
+{% endblock %}

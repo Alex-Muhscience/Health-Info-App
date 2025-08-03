@@ -1,0 +1,451 @@
+{% extends 'base.html' %}
+
+{% block title %}Laboratory - Health Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-flask me-2"></i>Laboratory Management
+            </h1>
+            <div class="btn-group" role="group">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLabOrderModal">
+                    <i class="fas fa-plus me-2"></i>New Order
+                </button>
+                <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#addLabTestModal">
+                    <i class="fas fa-vial me-2"></i>New Test Type
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ stats.pending_orders|default:0 }}</h4>
+                        <small>Pending Orders</small>
+                    </div>
+                    <i class="fas fa-clock fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ stats.in_progress|default:0 }}</h4>
+                        <small>In Progress</small>
+                    </div>
+                    <i class="fas fa-play fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ stats.completed_today|default:0 }}</h4>
+                        <small>Completed Today</small>
+                    </div>
+                    <i class="fas fa-check fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ stats.urgent_orders|default:0 }}</h4>
+                        <small>Urgent Orders</small>
+                    </div>
+                    <i class="fas fa-exclamation fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lab Orders -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab">
+                            <i class="fas fa-list me-2"></i>Lab Orders
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tests-tab" data-bs-toggle="tab" data-bs-target="#tests" type="button" role="tab">
+                            <i class="fas fa-vial me-2"></i>Test Types
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <!-- Lab Orders Tab -->
+                    <div class="tab-pane fade show active" id="orders" role="tabpanel">
+                        {% if lab_orders %}
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Patient</th>
+                                            <th>Test</th>
+                                            <th>Priority</th>
+                                            <th>Status</th>
+                                            <th>Ordered Date</th>
+                                            <th>Collection Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for order in lab_orders %}
+                                        <tr>
+                                            <td><strong>#{{ order.id }}</strong></td>
+                                            <td>
+                                                {% if order.client_name %}
+                                                    {{ order.client_name }}
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ order.test_name|default:"N/A" }}</td>
+                                            <td>
+                                                {% if order.priority == 'urgent' %}
+                                                    <span class="badge bg-danger">Urgent</span>
+                                                {% elif order.priority == 'high' %}
+                                                    <span class="badge bg-warning">High</span>
+                                                {% else %}
+                                                    <span class="badge bg-info">Routine</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if order.status == 'ordered' %}
+                                                    <span class="badge bg-secondary">Ordered</span>
+                                                {% elif order.status == 'collected' %}
+                                                    <span class="badge bg-warning">Collected</span>
+                                                {% elif order.status == 'processing' %}
+                                                    <span class="badge bg-info">Processing</span>
+                                                {% elif order.status == 'completed' %}
+                                                    <span class="badge bg-success">Completed</span>
+                                                {% else %}
+                                                    <span class="badge bg-dark">{{ order.status|title }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+                                            <td>
+                                                {% if order.collection_date %}
+                                                    {{ order.collection_date|date:"M d, Y H:i" }}
+                                                {% else %}
+                                                    <span class="text-muted">Not collected</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <button class="btn btn-sm btn-outline-primary view-order" data-order-id="{{ order.id }}" title="View Details">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-info update-status" data-order-id="{{ order.id }}" title="Update Status">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    {% if order.status == 'completed' %}
+                                                    <button class="btn btn-sm btn-outline-success view-results" data-order-id="{{ order.id }}" title="View Results">
+                                                        <i class="fas fa-file-medical"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-flask fa-3x text-muted mb-3"></i>
+                                <h4 class="text-muted">No Lab Orders Found</h4>
+                                <p class="text-muted">Get started by creating your first lab order.</p>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLabOrderModal">
+                                    <i class="fas fa-plus me-2"></i>Create First Order
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Test Types Tab -->
+                    <div class="tab-pane fade" id="tests" role="tabpanel">
+                        {% if lab_tests %}
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Test Name</th>
+                                            <th>Code</th>
+                                            <th>Category</th>
+                                            <th>Normal Range</th>
+                                            <th>Unit</th>
+                                            <th>Cost</th>
+                                            <th>Turnaround Time</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for test in lab_tests %}
+                                        <tr>
+                                            <td><strong>{{ test.name }}</strong></td>
+                                            <td>{{ test.code|default:"N/A" }}</td>
+                                            <td>{{ test.category|default:"N/A" }}</td>
+                                            <td>{{ test.normal_range|default:"N/A" }}</td>
+                                            <td>{{ test.unit|default:"N/A" }}</td>
+                                            <td>
+                                                {% if test.cost %}
+                                                    ${{ test.cost }}
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ test.turnaround_time|default:"N/A" }}</td>
+                                            <td>
+                                                {% if test.is_active %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <button class="btn btn-sm btn-outline-info edit-test" data-test-id="{{ test.id }}" title="Edit Test">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-warning create-order" data-test-id="{{ test.id }}" title="Create Order">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-vial fa-3x text-muted mb-3"></i>
+                                <h4 class="text-muted">No Test Types Found</h4>
+                                <p class="text-muted">Get started by adding your first test type.</p>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLabTestModal">
+                                    <i class="fas fa-plus me-2"></i>Add First Test Type
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Lab Order Modal -->
+<div class="modal fade" id="addLabOrderModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-plus me-2"></i>New Lab Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addLabOrderForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="patientSelect" class="form-label">Patient</label>
+                                <select class="form-select" id="patientSelect" name="client_id" required>
+                                    <option value="">Select Patient</option>
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="testSelect" class="form-label">Test</label>
+                                <select class="form-select" id="testSelect" name="test_id" required>
+                                    <option value="">Select Test</option>
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="priority" class="form-label">Priority</label>
+                                <select class="form-select" id="priority" name="priority">
+                                    <option value="routine">Routine</option>
+                                    <option value="high">High</option>
+                                    <option value="urgent">Urgent</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="specimenType" class="form-label">Specimen Type</label>
+                                <input type="text" class="form-control" id="specimenType" name="specimen_type" placeholder="e.g., Blood, Urine">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="clinicalNotes" class="form-label">Clinical Notes</label>
+                        <textarea class="form-control" id="clinicalNotes" name="clinical_notes" rows="3" placeholder="Enter any relevant clinical information"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Lab Test Modal -->
+<div class="modal fade" id="addLabTestModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-vial me-2"></i>New Test Type</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addLabTestForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="testName" class="form-label">Test Name</label>
+                                <input type="text" class="form-control" id="testName" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="testCode" class="form-label">Test Code</label>
+                                <input type="text" class="form-control" id="testCode" name="code">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="testCategory" class="form-label">Category</label>
+                                <input type="text" class="form-control" id="testCategory" name="category" placeholder="e.g., Hematology, Chemistry">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="testUnit" class="form-label">Unit</label>
+                                <input type="text" class="form-control" id="testUnit" name="unit" placeholder="e.g., mg/dL, cells/μL">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="testCost" class="form-label">Cost</label>
+                                <input type="number" class="form-control" id="testCost" name="cost" step="0.01" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="turnaroundTime" class="form-label">Turnaround Time</label>
+                                <input type="text" class="form-control" id="turnaroundTime" name="turnaround_time" placeholder="e.g., 2-4 hours, 1 day">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="normalRange" class="form-label">Normal Range</label>
+                        <input type="text" class="form-control" id="normalRange" name="normal_range" placeholder="e.g., 4.5-11.0 x10³/μL">
+                    </div>
+                    <div class="mb-3">
+                        <label for="testDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="testDescription" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Test Type</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add lab order form submission
+    $('#addLabOrderForm').submit(function(e) {
+        e.preventDefault();
+        // TODO: Implement lab order creation via AJAX
+        alert('Lab order creation functionality to be implemented');
+    });
+
+    // Add lab test form submission
+    $('#addLabTestForm').submit(function(e) {
+        e.preventDefault();
+        // TODO: Implement lab test creation via AJAX
+        alert('Lab test creation functionality to be implemented');
+    });
+
+    // View order details
+    $('.view-order').click(function() {
+        const orderId = $(this).data('order-id');
+        // TODO: Implement order details modal
+        alert('View order details for ID: ' + orderId);
+    });
+
+    // Update status
+    $('.update-status').click(function() {
+        const orderId = $(this).data('order-id');
+        // TODO: Implement status update modal
+        alert('Update status for order ID: ' + orderId);
+    });
+
+    // View results
+    $('.view-results').click(function() {
+        const orderId = $(this).data('order-id');
+        // TODO: Implement results viewing modal
+        alert('View results for order ID: ' + orderId);
+    });
+
+    // Edit test
+    $('.edit-test').click(function() {
+        const testId = $(this).data('test-id');
+        // TODO: Implement test editing modal
+        alert('Edit test for ID: ' + testId);
+    });
+
+    // Create order for specific test
+    $('.create-order').click(function() {
+        const testId = $(this).data('test-id');
+        // TODO: Pre-populate order form with selected test
+        $('#addLabOrderModal').modal('show');
+        $('#testSelect').val(testId);
+    });
+});
+</script>
+{% endblock %}

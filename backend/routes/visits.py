@@ -15,7 +15,7 @@ VISIT_TYPES = [
 
 
 @visits_bp.route('/', methods=['GET'])
-@roles_required(['admin', 'doctor', 'nurse'])
+@roles_required('admin', 'doctor', 'nurse')
 def get_visits(current_user):
     """Get visits with filters"""
     client_id = request.args.get('client_id')
@@ -60,7 +60,7 @@ def get_visits(current_user):
 
 
 @visits_bp.route('/<client_id>', methods=['POST'])
-@roles_required(['admin', 'doctor', 'nurse'])
+@roles_required('admin', 'doctor', 'nurse')
 def create_visit(current_user, client_id):
     """Create a new visit record"""
     client = Client.query.filter_by(id=client_id, is_active=True).first_or_404()
@@ -104,7 +104,7 @@ def create_visit(current_user, client_id):
 
 
 @visits_bp.route('/<visit_id>', methods=['GET'])
-@roles_required(['admin', 'doctor', 'nurse'])
+@roles_required('admin', 'doctor', 'nurse')
 def get_visit(current_user, visit_id):
     """Get specific visit details"""
     visit = Visit.query.get_or_404(visit_id)
@@ -112,7 +112,7 @@ def get_visit(current_user, visit_id):
 
 
 @visits_bp.route('/<visit_id>', methods=['PUT'])
-@roles_required(['admin', 'doctor'])
+@roles_required('admin', 'doctor')
 def update_visit(current_user, visit_id):
     """Update visit information"""
     visit = Visit.query.get_or_404(visit_id)

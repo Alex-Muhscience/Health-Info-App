@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Visits - Health Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-stethoscope me-2"></i>Visits
+            </h1>
+            <button class="btn btn-primary" id="add-visit">
+                <i class="fas fa-plus me-2"></i>Add Visit
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Visit Records
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if visits %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Client</th>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Purpose</th>
+                                    <th>Diagnosis</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for visit in visits %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ visit.client.first_name }} {{ visit.client.last_name }}</strong>
+                                    </td>
+                                    <td>{{ visit.visit_date|date:"M d, Y, h:i A" }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ visit.visit_type|title }}</span>
+                                    </td>
+                                    <td>{{ visit.purpose|truncatechars:50 }}</td>
+                                    <td>{{ visit.diagnosis|truncatechars:50|default:"N/A" }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary view-visit" data-visit-id="{{ visit.id }}" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-info edit-visit" data-visit-id="{{ visit.id }}" title="Edit Visit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-stethoscope fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Visits Found</h4>
+                        <p class="text-muted">Start recording patient visits.</p>
+                        <button class="btn btn-primary" id="add-first-visit">
+                            <i class="fas fa-plus me-2"></i>Record First Visit
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>Filter Visits
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="client_search" class="form-label">Client</label>
+                        <input type="text" class="form-control" id="client_search" name="client_search" placeholder="Client name..." value="{{ request.GET.client_search }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="visit_type" class="form-label">Visit Type</label>
+                        <select class="form-select" id="visit_type" name="visit_type">
+                            <option value="">All Types</option>
+                            <option value="consultation" {% if request.GET.visit_type == 'consultation' %}selected{% endif %}>Consultation</option>
+                            <option value="follow_up" {% if request.GET.visit_type == 'follow_up' %}selected{% endif %}>Follow-up</option>
+                            <option value="emergency" {% if request.GET.visit_type == 'emergency' %}selected{% endif %}>Emergency</option>
+                            <option value="vaccination" {% if request.GET.visit_type == 'vaccination' %}selected{% endif %}>Vaccination</option>
+                            <option value="test" {% if request.GET.visit_type == 'test' %}selected{% endif %}>Test</option>
+                            <option value="procedure" {% if request.GET.visit_type == 'procedure' %}selected{% endif %}>Procedure</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date_from" class="form-label">Date From</label>
+                        <input type="date" class="form-control" id="date_from" name="date_from" value="{{ request.GET.date_from }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date_to" class="form-label">Date To</label>
+                        <input type="date" class="form-control" id="date_to" name="date_to" value="{{ request.GET.date_to }}">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-filter me-1"></i>Apply Filters
+                        </button>
+                        <a href="{% url 'visits_list' %}" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add visit functionality
+    $('#add-visit, #add-first-visit').click(function() {
+        // TODO: Implement visit addition modal
+        alert('Open modal to add visit');
+    });
+
+    // View visit functionality
+    $('.view-visit').click(function() {
+        const visitId = $(this).data('visit-id');
+        // TODO: Implement view visit modal
+        alert('View visit ID: ' + visitId);
+    });
+
+    // Edit visit functionality
+    $('.edit-visit').click(function() {
+        const visitId = $(this).data('visit-id');
+        // TODO: Implement edit visit modal
+        alert('Edit visit ID: ' + visitId);
+    });
+});
+</script>
+{% endblock %}

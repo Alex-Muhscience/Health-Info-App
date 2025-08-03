@@ -97,3 +97,35 @@ def roles_required(*required_roles):
 def admin_required(f):
     """Convenience decorator for admin-only endpoints"""
     return roles_required('admin')(f)
+
+def role_required(required_role):
+    """Single role requirement decorator"""
+    def decorator(f):
+        @wraps(f)
+        @token_required
+        def decorated(current_user, *args, **kwargs):
+            if current_user.role != required_role:
+                logger.warning(
+                    f"Role violation: User {current_user.id} "
+                    f"attempted {request.endpoint} (required: {required_role})"
+                )
+                return jsonify({
+                    'error': 'Insufficient permissions',
+                    'required_role': required_role,
+                    'your_role': current_user.role
+                }), 403
+            return f(current_user, *args, **kwargs)
+        return decorated
+    return decorator
+
+def doctor_required(f):
+    """Convenience decorator for doctor-only endpoints"""
+    return role_required('doctor')(f)
+
+def nurse_required(f):
+    """Convenience decorator for nurse-only endpoints"""
+    return role_required('nurse')(f)
+
+def staff_required(f):
+    """Convenience decorator for medical staff endpoints"""
+    return roles_required('admin', 'doctor', 'nurse', 'lab_tech', 'pharmacy', 'staff')(f)

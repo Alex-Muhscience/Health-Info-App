@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Patient Flow Analytics{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2>Patient Flow Analytics</h2>
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4 class="card-title">Daily Visit Counts</h4>
+        </div>
+        <div class="card-body">
+            <!-- Visualization to be added -->
+            <pre>{{ flow_data.daily_visits|json_script:"daily-visits-data" }}</pre>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4 class="card-title">Peak Hours</h4>
+        </div>
+        <div class="card-body">
+            <!-- Visualization to be added -->
+            <pre>{{ flow_data.peak_hours|json_script:"peak-hours-data" }}</pre>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4 class="card-title">Visit Type Distribution</h4>
+        </div>
+        <div class="card-body">
+            <!-- Visualization to be added -->
+            <pre>{{ flow_data.visit_distribution|json_script:"visit-type-data" }}</pre>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Summary</h4>
+        </div>
+        <div class="card-body">
+            <p>Total Visits in {{ period_days }} Days: {{ flow_data.total_visits }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

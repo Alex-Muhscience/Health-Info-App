@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Operational Efficiency{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2>Operational Efficiency Metrics</h2>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4 class="card-title">Bed Occupancy Rate</h4>
+        </div>
+        <div class="card-body">
+            <h3>{{ efficiency_data.bed_occupancy_rate }}%</h3>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4 class="card-title">Department Utilization</h4>
+        </div>
+        <div class="card-body">
+            {% if efficiency_data.department_utilization %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Staff Count</th>
+                                <th>Daily Appointments</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dept in efficiency_data.department_utilization %}
+                            <tr>
+                                <td>{{ dept.department }}</td>
+                                <td>{{ dept.staff_count }}</td>
+                                <td>{{ dept.daily_appointments }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No department data available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Inventory Status</h4>
+        </div>
+        <div class="card-body">
+            <p>Low Stock Items: {{ efficiency_data.inventory_status.low_stock_items }}</p>
+            <p>Total Items: {{ efficiency_data.inventory_status.total_items }}</p>
+            <p>Stock Adequacy Rate: {{ efficiency_data.inventory_status.stock_adequacy_rate }}%</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

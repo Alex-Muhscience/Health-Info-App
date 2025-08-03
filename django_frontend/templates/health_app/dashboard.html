@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Health Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .border-left-primary {
+        border-left: 4px solid #007bff;
+    }
+    .border-left-success {
+        border-left: 4px solid #28a745;
+    }
+    .border-left-info {
+        border-left: 4px solid #17a2b8;
+    }
+    .border-left-warning {
+        border-left: 4px solid #ffc107;
+    }
+    .border-left-danger {
+        border-left: 4px solid #dc3545;
+    }
+    .border-left-secondary {
+        border-left: 4px solid #6c757d;
+    }
+    .card-hover {
+        transition: transform 0.2s;
+    }
+    .card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-dashboard me-2"></i>Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title mb-1">Total Patients</h6>
+                        <h3 class="mb-0">{{ dashboard_data.total_clients|default:0 }}</h3>
+                        <small class="opacity-75">+12% from last month</small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title mb-1">Today's Appointments</h6>
+                        <h3 class="mb-0">{{ dashboard_data.todays_appointments|default:0 }}</h3>
+                        <small class="opacity-75">{{ dashboard_data.upcoming_appointments|default:0 }} upcoming</small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-check fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title mb-1">Active Admissions</h6>
+                        <h3 class="mb-0">{{ dashboard_data.active_admissions|default:0 }}</h3>
+                        <small class="opacity-75">{{ dashboard_data.available_beds|default:0 }} beds available</small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-bed fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-warning text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title mb-1">Pending Lab Results</h6>
+                        <h3 class="mb-0">{{ dashboard_data.pending_lab_results|default:0 }}</h3>
+                        <small class="opacity-75">{{ dashboard_data.urgent_labs|default:0 }} urgent</small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-flask fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Secondary Statistics Row -->
+<div class="row mb-4">
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card border-left-primary h-100">
+            <div class="card-body py-3">
+                <div class="text-center">
+                    <i class="fas fa-user-md text-primary mb-2"></i>
+                    <h6 class="mb-1">Active Staff</h6>
+                    <h5 class="mb-0">{{ dashboard_data.active_staff|default:0 }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card border-left-success h-100">
+            <div class="card-body py-3">
+                <div class="text-center">
+                    <i class="fas fa-pills text-success mb-2"></i>
+                    <h6 class="mb-1">Prescriptions</h6>
+                    <h5 class="mb-0">{{ dashboard_data.active_prescriptions|default:0 }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card border-left-info h-100">
+            <div class="card-body py-3">
+                <div class="text-center">
+                    <i class="fas fa-receipt text-info mb-2"></i>
+                    <h6 class="mb-1">Pending Bills</h6>
+                    <h5 class="mb-0">{{ dashboard_data.pending_bills|default:0 }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card border-left-warning h-100">
+            <div class="card-body py-3">
+                <div class="text-center">
+                    <i class="fas fa-exclamation-triangle text-warning mb-2"></i>
+                    <h6 class="mb-1">Low Stock</h6>
+                    <h5 class="mb-0">{{ dashboard_data.low_stock_items|default:0 }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card border-left-danger h-100">
+            <div class="card-body py-3">
+                <div class="text-center">
+                    <i class="fas fa-heartbeat text-danger mb-2"></i>
+                    <h6 class="mb-1">Emergency</h6>
+                    <h5 class="mb-0">{{ dashboard_data.emergency_cases|default:0 }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card border-left-secondary h-100">
+            <div class="card-body py-3">
+                <div class="text-center">
+                    <i class="fas fa-dollar-sign text-secondary mb-2"></i>
+                    <h6 class="mb-1">Revenue</h6>
+                    <h5 class="mb-0">${{ dashboard_data.monthly_revenue|default:0|floatformat:0 }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'add_client' %}" class="btn btn-primary btn-block w-100">
+                            <i class="fas fa-user-plus me-2"></i>Add New Client
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'appointments_list' %}" class="btn btn-success btn-block w-100">
+                            <i class="fas fa-calendar-plus me-2"></i>Schedule Appointment
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'visits_list' %}" class="btn btn-info btn-block w-100">
+                            <i class="fas fa-notes-medical me-2"></i>Record Visit
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'clients_list' %}" class="btn btn-secondary btn-block w-100">
+                            <i class="fas fa-list me-2"></i>View All Clients
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Activities
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if dashboard_data.recent_activities %}
+                    <ul class="list-group list-group-flush">
+                        {% for activity in dashboard_data.recent_activities %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ activity.type }}</strong>: {{ activity.description }}
+                                </div>
+                                <small class="text-muted">{{ activity.timestamp }}</small>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted mb-0">No recent activities to display.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

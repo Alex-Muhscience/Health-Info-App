@@ -10,7 +10,7 @@ appointments_bp = Blueprint('appointments', __name__)
 
 
 @appointments_bp.route('/', methods=['GET'])
-@roles_required(['admin', 'doctor', 'nurse', 'receptionist'])
+@roles_required('admin', 'doctor', 'nurse', 'receptionist')
 def get_appointments(current_user):
     """Get appointments with filters"""
     client_id = request.args.get('client_id')
@@ -55,7 +55,7 @@ def get_appointments(current_user):
 
 
 @appointments_bp.route('/', methods=['POST'])
-@roles_required(['admin', 'doctor', 'nurse', 'receptionist'])
+@roles_required('admin', 'doctor', 'nurse', 'receptionist')
 def create_appointment(current_user):
     """Create a new appointment with conflict checking"""
     data = request.get_json()
@@ -113,7 +113,7 @@ def get_available_slots(date):
 
 
 @appointments_bp.route('/<appointment_id>', methods=['GET'])
-@roles_required(['admin', 'doctor', 'nurse', 'receptionist'])
+@roles_required('admin', 'doctor', 'nurse', 'receptionist')
 def get_appointment(current_user, appointment_id):
     """Get appointment details"""
     appointment = Appointment.query.get_or_404(appointment_id)
@@ -121,7 +121,7 @@ def get_appointment(current_user, appointment_id):
 
 
 @appointments_bp.route('/<appointment_id>', methods=['PUT'])
-@roles_required(['admin', 'doctor', 'nurse', 'receptionist'])
+@roles_required('admin', 'doctor', 'nurse', 'receptionist')
 def update_appointment(current_user, appointment_id):
     """Update appointment information"""
     appointment = Appointment.query.get_or_404(appointment_id)

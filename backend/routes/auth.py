@@ -8,7 +8,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token, get_jw
 from backend.schemas import user_schema
 from backend.utils.auth import token_required, admin_required
 from backend.utils.helpers import validate_email, validate_password
-from backend.utils.rate_limit import limiter
+from backend import limiter
 import logging
 
 auth_bp = Blueprint('auth', __name__)

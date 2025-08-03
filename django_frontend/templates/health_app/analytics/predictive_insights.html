@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Predictive Insights{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2>Predictive Healthcare Insights</h2>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4 class="card-title">High-Risk Patients</h4>
+        </div>
+        <div class="card-body">
+            {% if insights_data.high_risk_patients %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Patient Name</th>
+                                <th>Visit Count</th>
+                                <th>Visit Variety</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for patient in insights_data.high_risk_patients %}
+                            <tr>
+                                <td>{{ patient.name }}</td>
+                                <td>{{ patient.visit_count }}</td>
+                                <td>{{ patient.visit_variety }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No high-risk patients identified.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4 class="card-title">Demand Forecast</h4>
+        </div>
+        <div class="card-body">
+            <p>Current Weekly Average: {{ insights_data.demand_forecast.current_weekly_average }}</p>
+            <p>Trend Percentage: {{ insights_data.demand_forecast.trend_percentage }}%</p>
+            <p>Predicted Next Week: {{ insights_data.demand_forecast.predicted_next_week }}</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Recommendations</h4>
+        </div>
+        <div class="card-body">
+            {% if insights_data.recommendations %}
+                <ul>
+                    {% for recommendation in insights_data.recommendations %}
+                    <li>{{ recommendation }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No recommendations available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Period</h4>
+        </div>
+        <div class="card-body">
+            <p>Analysis based on {{ period_days }} days of data</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

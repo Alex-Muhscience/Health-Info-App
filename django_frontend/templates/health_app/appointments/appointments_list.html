@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Appointments - Health Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-calendar-alt me-2"></i>Appointments
+            </h1>
+            <button class="btn btn-primary" id="add-appointment">
+                <i class="fas fa-plus me-2"></i>Add Appointment
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Appointment List
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if appointments %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Client</th>
+                                    <th>Date</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in appointments %}
+                                <tr>
+                                    <td>{{ appointment.client.first_name }} {{ appointment.client.last_name }}</td>
+                                    <td>{{ appointment.date|date:"M d, Y, h:i A" }}</td>
+                                    <td>{{ appointment.duration_minutes }} mins</td>
+                                    <td>
+                                        {% if appointment.status == 'scheduled' %}
+                                            <span class="badge bg-primary">Scheduled</span>
+                                        {% elif appointment.status == 'completed' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif appointment.status == 'cancelled' %}
+                                            <span class="badge bg-danger">Cancelled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-info edit-appointment" data-appointment-id="{{ appointment.id }}" title="Edit Appointment">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger delete-appointment" data-appointment-id="{{ appointment.id }}" title="Cancel Appointment">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Appointments Found</h4>
+                        <p class="text-muted">Start scheduling appointments for your clients.</p>
+                        <button class="btn btn-primary" id="add-first-appointment">
+                            <i class="fas fa-plus me-2"></i>Schedule First Appointment
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add appointment functionality
+    $('#add-appointment, #add-first-appointment').click(function() {
+        // TODO: Implement appointment addition modal
+        alert('Open modal to add appointment');
+    });
+
+    // Edit appointment functionality
+    $('.edit-appointment').click(function() {
+        const appointmentId = $(this).data('appointment-id');
+        // TODO: Implement edit appointment modal
+        alert('Edit appointment ID: ' + appointmentId);
+    });
+
+    // Delete appointment functionality
+    $('.delete-appointment').click(function() {
+        const appointmentId = $(this).data('appointment-id');
+        // TODO: Implement delete confirmation and functionality
+        confirm('Do you really want to cancel appointment ID: ' + appointmentId + '?');
+    });
+});
+</script>
+{% endblock %}

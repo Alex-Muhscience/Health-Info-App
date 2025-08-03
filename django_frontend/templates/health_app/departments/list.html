@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Departments - Health Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-building me-2"></i>Departments
+            </h1>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">
+                <i class="fas fa-plus me-2"></i>Add New Department
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Department List
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if departments %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Head of Department</th>
+                                    <th>Staff Count</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for department in departments %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ department.name }}</strong>
+                                    </td>
+                                    <td>{{ department.description|default:"N/A" }}</td>
+                                    <td>
+                                        {% if department.head_of_department %}
+                                            {{ department.head_of_department.first_name }} {{ department.head_of_department.last_name }}
+                                        {% else %}
+                                            <span class="text-muted">Not assigned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ department.staff_count|default:0 }}</span>
+                                    </td>
+                                    <td>{{ department.location|default:"N/A" }}</td>
+                                    <td>
+                                        {% if department.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary view-department" data-department-id="{{ department.id }}" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-info edit-department" data-department-id="{{ department.id }}" title="Edit Department">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning view-staff" data-department-id="{{ department.id }}" title="View Staff">
+                                                <i class="fas fa-users"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Departments Found</h4>
+                        <p class="text-muted">Get started by adding your first department.</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">
+                            <i class="fas fa-plus me-2"></i>Add First Department
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Department Modal -->
+<div class="modal fade" id="addDepartmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add New Department</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addDepartmentForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="departmentName" class="form-label">Department Name</label>
+                        <input type="text" class="form-control" id="departmentName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="departmentDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="departmentDescription" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="departmentLocation" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="departmentLocation" name="location">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Department</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add department form submission
+    $('#addDepartmentForm').submit(function(e) {
+        e.preventDefault();
+        // TODO: Implement department creation via AJAX
+        alert('Department creation functionality to be implemented');
+    });
+
+    // View department details
+    $('.view-department').click(function() {
+        const departmentId = $(this).data('department-id');
+        // TODO: Implement department details modal
+        alert('View department details for ID: ' + departmentId);
+    });
+
+    // Edit department
+    $('.edit-department').click(function() {
+        const departmentId = $(this).data('department-id');
+        // TODO: Implement department editing modal
+        alert('Edit department for ID: ' + departmentId);
+    });
+
+    // View staff in department
+    $('.view-staff').click(function() {
+        const departmentId = $(this).data('department-id');
+        // TODO: Navigate to staff filtered by department
+        alert('View staff in department ID: ' + departmentId);
+    });
+});
+</script>
+{% endblock %}

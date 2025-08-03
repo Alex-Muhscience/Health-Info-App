@@ -29,6 +29,7 @@ def get_programs(current_user):
 
 
 @programs_bp.route('/', methods=['POST'])
+@token_required
 @roles_required(['admin', 'doctor'])
 def create_program(current_user):
     """Create a new health program"""
@@ -72,6 +73,7 @@ def get_program(current_user, program_id):
 
 
 @programs_bp.route('/<program_id>', methods=['PUT'])
+@token_required
 @roles_required(['admin', 'doctor'])
 def update_program(current_user, program_id):
     """Update program information"""
@@ -118,6 +120,7 @@ def update_program(current_user, program_id):
 
 
 @programs_bp.route('/<program_id>/enrollments', methods=['GET'])
+@token_required
 @roles_required(['admin', 'doctor', 'nurse'])
 def get_program_enrollments(current_user, program_id):
     """Get all enrollments for a specific program"""
