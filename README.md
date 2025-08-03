@@ -1,308 +1,71 @@
-# 🏥 Health Management System
+# Health Management System
 
-[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://python.org)
-[![Flask](https://img.shields.io/badge/Flask-2.3+-green.svg)](https://flask.palletsprojects.com/)
-[![Django](https://img.shields.io/badge/Django-4.2+-orange.svg)](https://djangoproject.com)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+Welcome to the Health Management System, a comprehensive solution designed to streamline healthcare facility operations through modern web technologies. This system offers extensive functionalities including patient management, appointment scheduling, analytics, and more.
 
-A comprehensive healthcare management system built with Flask backend and Django frontend, featuring advanced analytics, security, and full hospital operations management.
+## Key Features
 
-## 🌟 Features
+- **Patient Management:** Maintain comprehensive patient records, track appointments, and manage communications.
+- **Analytics and Reporting:** Real-time dashboards, predictive analytics, and historical data analysis.
+- **Security:** HIPAA compliant with role-based access, data encryption, and audit logs.
+- **Integration:** Seamless integration between Django frontend and Flask API backend.
+- **Responsive Design:** Accessible on multiple devices with a modern and intuitive user interface.
 
-### 🔍 Advanced Analytics Engine
-- **Patient Flow Analysis** - Track patient visits, peak hours, and visit type distribution
-- **Revenue Analytics** - Monitor daily revenue, service breakdowns, and outstanding payments
-- **Clinical Quality Metrics** - Track length of stay, readmission rates, lab turnaround times
-- **Operational Efficiency** - Monitor bed occupancy, department utilization, inventory status
-- **Predictive Insights** - AI-powered recommendations and demand forecasting
+## Architecture Overview
 
-### 🔐 Enterprise Security System
-- **HIPAA Compliance** - Comprehensive audit logging and data protection
-- **Role-Based Access Control** - Granular permissions for different user roles
-- **Threat Detection** - Automated security monitoring and response
-- **Data Encryption** - Secure handling of sensitive patient information
-- **Session Management** - Advanced authentication and authorization
+The system is designed using a microservices approach with:
 
-### 🏥 Complete Hospital Management
-- **Patient Management** - Complete patient records and demographics
-- **Appointment Scheduling** - Advanced booking and calendar management
-- **Medical Records** - Comprehensive EMR with vital signs and notes
-- **Laboratory Management** - Lab orders, results, and test tracking
-- **Pharmacy Operations** - Prescription management and inventory
-- **Staff Management** - Employee records and department organization
-- **Billing & Insurance** - Complete financial management system
-- **Telemedicine** - Virtual consultation capabilities
-- **Inventory Management** - Stock tracking and automated alerts
+- **Django Frontend** (Port 8001): Manages the user interface and user authentication.
+- **Flask Backend** (Port 8000): Handles API requests, business logic, and data processing.
+- **PostgreSQL Database:** Stores all persistent data with reliability and scalability.
 
-### 🎨 Modern User Interface
-- **Responsive Design** - Bootstrap-based UI that works on all devices
-- **Professional Dashboard** - Real-time metrics and insights
-- **Intuitive Navigation** - Easy-to-use interface for healthcare professionals
-- **Advanced Search & Filtering** - Quick access to patient and system data
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.9 or higher
-- PostgreSQL 12+ (or SQLite for development)
-- Node.js 16+ (for frontend assets)
-- Redis (optional, for caching)
-
-### Installation
+## Installation
 
 1. **Clone the Repository**
+
    ```bash
-   git clone https://github.com/yourusername/health-management-system.git
+   git clone https://github.com/your-username/health-management-system.git
    cd health-management-system
    ```
 
-2. **Set Up Virtual Environment**
+2. **Set Up the Virtual Environment**
+
    ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   python -m venv venv
+   source venv/bin/activate # On Windows use `venv\Scripts\activate`
    ```
 
 3. **Install Dependencies**
+
    ```bash
    pip install -r requirements.txt
-   cd django_frontend
-   pip install -r requirements.txt
-   cd ..
-   ```
+   ````
 
-4. **Environment Configuration**
+4. **Environment Variables**
+
+   Configure your `.env` file with necessary database connections and secret keys.
+
+5. **Initialize the Database**
+
    ```bash
-   cp .env.example .env
-   # Edit .env with your database and security settings
+   python scripts/init_db.py
    ```
 
-5. **Database Setup**
-   ```bash
-   # Initialize and populate database with sample data
-   python scripts/create_comprehensive_db.py
-   ```
+6. **Run the Applications**
 
-6. **Start the System**
-   ```bash
-   # Option 1: Use the startup script
-   python start_health_system.py
-   
-   # Option 2: Start services manually
-   # Terminal 1 - Backend
-   cd backend && python app.py
-   
-   # Terminal 2 - Frontend
-   cd django_frontend && python manage.py runserver 8001
-   ```
+   - **Backend**: `flask run`
+   - **Frontend**: `python manage.py runserver 8001`
 
-### 🌐 Access Points
-- **Frontend UI**: http://localhost:8001
-- **Backend API**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/api/docs
+## Contribute
 
-### 👤 Default Login Credentials
-- **Admin**: `admin` / `admin123`
-- **Doctor**: `dr.smith` / `doctor123`
-- **Nurse**: `nurse.jane` / `nurse123`
+Contributions are welcome! Please fork the repository and submit pull requests for any improvements or new features.
 
-## 📊 System Architecture
+## License
 
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Django        │    │   Flask         │    │   Database      │
-│   Frontend      │◄──►│   Backend       │◄──►│   PostgreSQL    │
-│   (Port 8001)   │    │   (Port 8000)   │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-        │                       │                       │
-        ▼                       ▼                       ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Bootstrap UI  │    │  Analytics      │    │   Sample Data   │
-│   Responsive    │    │  Security       │    │   50+ Tables    │
-│   Professional  │    │  APIs           │    │   Relationships │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
+MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🔧 Configuration
+## Contact
 
-### Environment Variables
-Create a `.env` file with the following variables:
-
-```env
-# Database
-DATABASE_URL=postgresql://user:password@localhost/healthsystem
-
-# Security
-SECRET_KEY=your-secret-key-here
-JWT_SECRET_KEY=your-jwt-secret-here
-
-# Application
-FLASK_ENV=development
-DEBUG=True
-
-# CORS
-CORS_ORIGINS=http://localhost:8001,http://127.0.0.1:8001
-
-# Rate Limiting
-RATE_LIMIT=200 per day
-
-# Logging
-LOG_LEVEL=INFO
-```
-
-## 📁 Project Structure
-
-```
-health-management-system/
-├── backend/                 # Flask API Backend
-│   ├── routes/             # API endpoints
-│   ├── models.py           # Database models
-│   ├── analytics_engine.py # Analytics system
-│   ├── security_system.py  # Security & audit
-│   └── app.py             # Flask application
-├── django_frontend/        # Django Frontend
-│   ├── health_app/        # Main Django app
-│   ├── templates/         # HTML templates
-│   └── manage.py          # Django management
-├── scripts/               # Utility scripts
-├── docs/                  # Documentation
-├── tests/                 # Test suite
-└── requirements.txt       # Python dependencies
-```
-
-## 🧪 Testing
-
-```bash
-# Run backend tests
-python -m pytest tests/backend/
-
-# Run frontend tests
-cd django_frontend
-python manage.py test
-
-# Run all tests
-python -m pytest
-```
-
-## 📖 API Documentation
-
-The system provides comprehensive REST APIs:
-
-- **Authentication**: `/api/auth/`
-- **Patients**: `/api/clients/`
-- **Appointments**: `/api/appointments/`
-- **Medical Records**: `/api/medical-records/`
-- **Analytics**: `/api/analytics/`
-- **Staff**: `/api/staff/`
-- **Billing**: `/api/billing/`
-
-Full API documentation is available at `/api/docs` when running the backend.
-
-## 🔒 Security Features
-
-- **HIPAA Compliance**: Complete audit trails and data protection
-- **Role-Based Access**: Admin, Doctor, Nurse, Receptionist, Billing roles
-- **Data Encryption**: Sensitive data encrypted at rest and in transit
-- **Audit Logging**: Comprehensive logging of all system activities
-- **Threat Detection**: Automated monitoring for suspicious activities
-- **Session Security**: Secure session management with JWT tokens
-
-## 📈 Analytics & Reporting
-
-- **Real-time Dashboards**: Live metrics and KPIs
-- **Predictive Analytics**: AI-powered insights and recommendations
-- **Custom Reports**: Generate reports for any time period
-- **Data Export**: CSV, PDF, and JSON export capabilities
-- **Visualization**: Charts and graphs for data interpretation
-
-## 🚀 Deployment
-
-### Production Deployment
-
-1. **Environment Setup**
-   ```bash
-   export FLASK_ENV=production
-   export DEBUG=False
-   ```
-
-2. **Database Migration**
-   ```bash
-   python scripts/manage_db.py --action migrate
-   ```
-
-3. **WSGI Server**
-   ```bash
-   gunicorn --bind 0.0.0.0:8000 backend.app:app
-   ```
-
-4. **Reverse Proxy** (Nginx example)
-   ```nginx
-   server {
-       listen 80;
-       server_name your-domain.com;
-       
-       location / {
-           proxy_pass http://127.0.0.1:8001;
-       }
-       
-       location /api/ {
-           proxy_pass http://127.0.0.1:8000;
-       }
-   }
-   ```
-
-### Docker Deployment
-
-```bash
-docker-compose up -d
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Guidelines
-
-- Follow PEP 8 for Python code
-- Use type hints where applicable
-- Write tests for new features
-- Update documentation as needed
-- Ensure security best practices
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- **Documentation**: Check the `/docs` folder for detailed guides
-- **Issues**: Report bugs via GitHub Issues
-- **Discussions**: Join our GitHub Discussions for questions
-- **Email**: contact@healthmanagementsystem.com
-
-## 🙏 Acknowledgments
-
-- Flask and Django communities
-- Bootstrap for UI components
-- All contributors and testers
-- Healthcare professionals who provided domain expertise
-
-## 📊 Project Stats
-
-- **Lines of Code**: 15,000+
-- **Database Tables**: 50+
-- **API Endpoints**: 100+
-- **Test Coverage**: 85%+
-- **Security Features**: HIPAA Compliant
-
----
-
-**Built with ❤️ for Healthcare Professionals**
-
-*Empowering healthcare through technology*
+For support or inquiries, please contact `support@healthmanagementsystem.com`.
 
 # Health Management System
 
